@@ -1,0 +1,189 @@
+#!/bin/ksh
+#----------------------------------------------------------------------
+#
+#     SCRIPT: run_erai_kk
+#
+#     LANGUAGE: ksh
+#
+#     DESCRIPTION:
+#
+# 
+#     A script to find highs or lows in the 6 hourly ERAI mslp 
+#     This (new) version calls the UM version of the tracking scheme
+#
+#     WRITTEN: A Pepler (based on code by K Braganza).
+#
+
+#----------------------------------------------------------------------
+#     delete function for temporary files
+
+function check_delete {
+    if [[ -f $1 ]]; then
+	rm -f $1
+    fi
+}
+#----------------------------------------------------------------------
+bpath=/home/z3478332/UM/cts.dir
+
+CYCBIN=$bpath/software.dir/cyc.dir/cycbin
+cyclocx=$CYCBIN/cycloc3x.hr
+trackx=$CYCBIN/trackx.hr
+trackmnx=$CYCBIN/trackmnx.hr
+tstatx=$CYCBIN/tstatx.hr
+
+spath=$bpath/mine/code
+opath=$bpath/mine/cyc_out
+diagnostic=$opath/diagnostics.out
+
+#----------------------------------------------------------------------
+
+type=low
+
+print "\nSCRIPT: runplot_mslp_day VERSION: 1.0"
+print "\nSCRIPT: runplot_mslp_day VERSION: 1.0" > $diagnostic
+
+#----------------------------------------------------------------------
+
+echo "Beginning MAIN" >> $diagnostic
+
+
+lats=101
+lons=151
+topo=$spath/WRF_topo_0
+outpath=/srv/ccrc/data34/z3478332/ECLtracks/outputUM_wrf_2007_all
+set -A directories zero  ERAI_R1_nudging_default_2007_BRAN_2eac  ERAI_R2_nudging_default_2007_BRAN_2eac ERAI_R3_nudging_default_2007_BRAN_2eac
+#set -A directories zero ERAI_R2_nudging_default_2007 ERAI_R2_nudging_default_2007 ERAI_R3_nudging_default_2007 ERAI_R1_nudging_default_2007_notopo ERAI_R2_nudging_default_2007_notopo ERAI_R3_nudging_default_2007_notopo
+
+set -A outname zero R1_BRAN_2eac R2_BRAN_2eac R3_BRAN_2eac
+#set -A outname zero R1 R2 R3 R1_notopo R2_notopo R3_notopo
+
+#----------------------------------------------------------------------
+for name in 3  ; do
+datadir=/srv/ccrc/data45/z3478332/WRF/output/${directories[$name]}/out/slp/
+echo $datadir
+
+for domain in d02 ; do
+
+fname=WRF_${domain}_slp_
+
+for proj in 100; do
+NN=$((proj*2+1))
+if [[ $proj -eq 100 ]] ; then
+  DFF=2.0
+else
+  DFF=0.5
+fi
+
+for rad in 2.0 ; do
+
+if [[ $rad -eq 2.0 ]] ; then
+  CV=0.5
+else
+  CV=0.25
+fi
+
+for iyear in 2007 ; do
+
+date1_loc=$(($iyear))0101
+date2_loc=$(($iyear))1231
+date1_loc2=${date1_loc:2:6}
+date2_loc2=${date2_loc:2:6}
+
+
+print $date1_loc $date1_loc2
+print $date2_loc $date2_loc2
+
+#----------------------------------------------------------------------
+# set up output directories
+
+   if [[ -a $outpath && -d $outpath ]] ; then
+    outpath=$outpath
+   else
+    mkdir $outpath  2>> stderr
+    outpath=$outpath
+   fi
+
+#----------------------------------------------------------------------
+# loop through the months in the season
+# Deleted all the cat part of this file
+# as done during gausmake instead
+
+check_delete ingausmake
+check_delete incycloc
+check_delete intrack
+check_delete loc_output
+check_delete tape1
+check_delete tape11
+check_delete stdout
+#----------------------------------------------------------------------
+# set up output directories
+
+print 'Output directories setted up.'
+print 'Proceeding to running script out.'
+
+#----------------------------------------------------------------------
+#     Simple processing script
+
+function runjob {
+#if [[ -s $infile ]]; then
+# print "/PROCESSING FOR $type/s FOR INPUT FILE: $infile"  >> $diagnostic
+#else
+# print "INPUT FILE DOES NOT EXSIST!: $infile"  >> $diagnostic
+# return
+#fi
+
+print "AUTOMATICALLY EDITING CONTROL FILES" >> $diagnostic
+# Added gausmake which makes the files
+sed -e "s/YYYYMMDD1/$date1_loc/" -e "s/YYYYMMDD2/$date2_loc/" -e "s/XLON/$lons/" -e "s/YLAT/$lats/" -e "s#DDDD#$datadir#" -e "s#NNNN#$fname#" 6hourwrfDIR2.ingausmake.kk > ingausmake
+sed -e "s/YYMMDD1/$date1_loc2/" -e "s/YYMMDD2/$date2_loc2/" -e "s/NN/$NN/g" -e "s/DFF/$DFF/g" -e "s/PROJ/$proj/" -e "s/CVMIN/$CV/g" -e "s/CVRAD/$rad/g" 6hourFLEX.incycloc.kk > incycloc
+sed -e "s/YYMMDD1/$date1_loc2/" -e "s/YYMMDD2/$date2_loc2/" 6hourerai.intrack.kk > intrack
+
+check_delete tape1
+check_delete tape11
+
+print 'calling gausmake'
+
+if [[ $iyear -eq 1999 || $iyear -eq 2000 ]] ; then
+    $spath/gausmake_wrf_dir2 spec
+else
+    $spath/gausmake_wrf_dir2 norm
+fi
+cp tape11 monthfile
+
+print 'calling cycloc'
+$CYCBIN/cycloc3x.hr -i incycloc -d 1 -c loc_output -z $topo monthfile >> stdout
+#$CYCBIN/cycloc3x.hr -i incycloc -d 1 -c loc_output monthfile >> stdout
+#cp loc_output $outpath/mslpo.$date1_loc$date2_loc.00001800.gcycloc
+
+print 'calling track'
+$CYCBIN/trackx.hr  -FO -i intrack -d 1 -c loc_output >> stdout
+touch trackfile
+cat thist?.1 > trackfile
+rm -f thist*
+#cp trackfile $outpath/mslpo.$date1_loc$date2_loc.00001800.trackfile
+
+ofile=$outpath/tracks_${domain}_${iyear}_${outname[$name]}_rad${rad%.*}_p${proj}_cv0.5_v2.dat
+print 'calling awk'
+touch $ofile
+awk -f $spath/maketracks_UM.awk trackfile > $ofile
+
+#check_delete tape11
+#check_delete trackfile
+#check_delete monthfile
+
+}
+
+echo "Run Job" >> $diagnostic
+runjob
+rm stdout
+
+done # years
+done # radius
+done # projection
+done # domain
+done # run
+
+#----------------------------------------------------------------------
+echo "Finished Main" >> $diagnostic
+
+exit

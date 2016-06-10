@@ -1,0 +1,15 @@
+
+SCRIPT: runplot_mslp_day VERSION: 1.0
+Running for 2008 to 2008
+20071201 071201
+20090131 090131
+Output directories setted up.
+Proceeding to running script out.
+calling gausmake
+
+PROGRAM: gausmake
+
+calling cycloc
+calling track
+calling awk
+iyear

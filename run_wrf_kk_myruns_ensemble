@@ -1,0 +1,196 @@
+#!/bin/ksh
+#----------------------------------------------------------------------
+#
+#     SCRIPT: run_erai_kk
+#
+#     LANGUAGE: ksh
+#
+#     DESCRIPTION:
+#
+# 
+#     A script to find highs or lows in the 6 hourly ERAI mslp 
+#     This (new) version calls the UM version of the tracking scheme
+#
+#     WRITTEN: A Pepler (based on code by K Braganza).
+#
+
+#----------------------------------------------------------------------
+#     delete function for temporary files
+
+function check_delete {
+    if [[ -f $1 ]]; then
+	rm -f $1
+    fi
+}
+#----------------------------------------------------------------------
+bpath=/home/z3478332/UM/cts.dir
+
+CYCBIN=$bpath/software.dir/cyc.dir/cycbin
+cyclocx=$CYCBIN/cycloc3x.hr
+trackx=$CYCBIN/trackx.hr
+trackmnx=$CYCBIN/trackmnx.hr
+tstatx=$CYCBIN/tstatx.hr
+
+spath=$bpath/mine/code
+opath=/srv/ccrc/data34/z3478332/ECLtracks/
+diagnostic=$opath/diagnostics.out
+
+#----------------------------------------------------------------------
+
+type=low
+
+print "\nSCRIPT: runplot_mslp_day VERSION: 1.0"
+print "\nSCRIPT: runplot_mslp_day VERSION: 1.0" > $diagnostic
+
+#----------------------------------------------------------------------
+
+echo "Beginning MAIN" >> $diagnostic
+
+firstdate=20070601
+lastdate=20070630
+refdate=20070601
+
+lats=101
+lons=151
+topo=$spath/WRF_topo_0
+
+set -A directories zero ERAI_R1_ensemble ERAI_R2_ensemble ERAI_R3_ensemble ERAI_R1_ensemble_notopo ERAI_R2_ensemble_notopo ERAI_R3_ensemble_notopo ERAI_R1_ensemble_BRAN  ERAI_R2_ensemble_BRAN ERAI_R3_ensemble_BRAN ERAI_R1_ensemble_BRAN_noeac  ERAI_R2_ensemble_BRAN_noeac ERAI_R3_ensemble_BRAN_noeac ERAI_R1_ensemble_BRAN_2eac  ERAI_R2_ensemble_BRAN_2eac ERAI_R3_ensemble_BRAN_2eac
+
+set -A subdirs zero 36 36 36 36 36 36 37 37 37 37 37 37 37 37 37
+
+for name in 9; do
+
+runname=${directories[$name]}
+
+for dom in d01  ; do
+fname=WRF_${dom}_slp_regrid.nc
+
+for proj in 100; do
+NN=$((proj*2+1))
+if [[ $proj -eq 100 ]] ; then
+  DFF=2.0
+else
+  DFF=0.5
+fi
+
+for rad in 2.0; do
+if [[ $rad -eq 2.0 ]] ; then
+  CV=1.0
+  CV2="1"
+else
+  CV=0.15
+  CV2="015"
+fi
+outpath=$opath/outputUM_wrf_2007-06/$runname/${dom}_p${proj}_rad${rad%.*}cv${CV2}/
+
+for day in 30 ; do
+for hour in "00"; do
+
+rundate=200705$day$hour
+datadir=/srv/ccrc/data${subdirs[$name]}/z3478332/WRF/output/$runname/out/$rundate/
+echo $datadir
+
+
+date1_loc=$firstdate
+date2_loc=$lastdate
+date1_loc2=${firstdate:2:6}
+date2_loc2=${lastdate:2:6}
+
+
+print $date1_loc $date1_loc2
+print $date2_loc $date2_loc2
+
+#----------------------------------------------------------------------
+# set up output directories
+
+   if [[ -a $outpath && -d $outpath ]] ; then
+    outpath=$outpath
+   else
+    mkdir $outpath  2>> stderr
+    outpath=$outpath
+   fi
+
+#----------------------------------------------------------------------
+# loop through the months in the season
+# Deleted all the cat part of this file
+# as done during gausmake instead
+
+check_delete ingausmake
+check_delete incycloc
+check_delete intrack
+check_delete loc_output
+check_delete tape1
+check_delete tape11
+check_delete stdout
+#----------------------------------------------------------------------
+# set up output directories
+
+print 'Output directories setted up.'
+print 'Proceeding to running script out.'
+
+#----------------------------------------------------------------------
+#     Simple processing script
+
+function runjob {
+#if [[ -s $infile ]]; then
+# print "/PROCESSING FOR $type/s FOR INPUT FILE: $infile"  >> $diagnostic
+#else
+# print "INPUT FILE DOES NOT EXSIST!: $infile"  >> $diagnostic
+# return
+#fi
+
+print "AUTOMATICALLY EDITING CONTROL FILES" >> $diagnostic
+# Added gausmake which makes the files
+sed -e "s/YYYYMMDD1/$date1_loc/" -e "s/YYYYMMDD2/$date2_loc/" -e "s/YYYYMMDD3/$refdate/" -e "s/XLON/$lons/" -e "s/YLAT/$lats/" -e "s#DDDD#$datadir#" -e "s#NNNN#$fname#"  6hourwrfDIR3.ingausmake.kk > ingausmake
+sed -e "s/YYMMDD1/$date1_loc2/" -e "s/YYMMDD2/$date2_loc2/" -e "s/NN/$NN/g" -e "s/DFF/$DFF/g" -e "s/PROJ/$proj/" -e "s/CVMIN/$CV/g" -e "s/CVRAD/$rad/g" 6hourFLEX.incycloc.kk > incycloc
+sed -e "s/YYMMDD1/$date1_loc2/" -e "s/YYMMDD2/$date2_loc2/" 6hourerai.intrack.kk > intrack
+
+check_delete tape1
+check_delete tape11
+
+print 'calling gausmake'
+
+if [[ $iyear -eq 1999 || $iyear -eq 2000 ]] ; then
+    $spath/gausmake_wrf_mine_v2 spec
+else
+    $spath/gausmake_wrf_mine_v2 norm
+fi
+cp tape11 monthfile
+
+print 'calling cycloc'
+$CYCBIN/cycloc3x.hr -i incycloc -d 1 -c loc_output -z $topo monthfile >> stdout
+#$CYCBIN/cycloc3x.hr -i incycloc -d 1 -c loc_output monthfile >> stdout
+#cp loc_output $outpath/mslpo.$date1_loc$date2_loc.00001800.gcycloc
+
+print 'calling track'
+$CYCBIN/trackx.hr  -FO -i intrack -d 1 -c loc_output >> stdout
+touch trackfile
+cat thist?.1 > trackfile
+rm -f thist*
+#cp trackfile $outpath/mslpo.$date1_loc$date2_loc.00001800.trackfile
+
+ofile=$outpath/tracks_$rundate.dat
+print 'calling awk'
+touch $ofile
+awk -f $spath/maketracks_UM.awk trackfile > $ofile
+
+#check_delete tape11
+#check_delete trackfile
+#check_delete monthfile
+
+}
+
+echo "Run Job" >> $diagnostic
+runjob
+rm stdout
+
+done
+done
+done
+done
+done
+done
+#----------------------------------------------------------------------
+echo "Finished Main" >> $diagnostic
+
+exit
