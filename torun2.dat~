@@ -1,7 +1,0 @@
-R
-source('~/Charles_bom/updateECLdatabase.R')
-setwd('~/Charles_bom/output')
-ECLdatabase(1980,1996,'unsw_merra05a_8096')
-ECLdatabase(1996,2008,'unsw_merra05a_9608')
-rm(list=ls())
-
