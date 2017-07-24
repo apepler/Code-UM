@@ -1,0 +1,15 @@
+#!/bin/csh
+#PBS -m ae
+#PBS -M acacia.pepler@bom.gov.au
+#PBS -P eg3
+#PBS -q normal
+#PBS -l walltime=20:00:00
+#PBS -l mem=16GB
+#PBS -l ncpus=1
+#PBS -j oe
+#PBS -l wd
+
+echo "Starting time:"
+date
+
+./run_gcyc_access_4mon

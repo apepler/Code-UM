@@ -1,0 +1,24 @@
+GCYCLOC PARAMETERS:                                                            
+                                                                              
+010000                ddhmmn  (i6)     Minimum (standard) interval between input times (ddhhmm).
+010000                ddhmmx  (i6)     Maximum interval between input times (ddhhmm).
+YYYYMMDD1 0000         dystrtc hrstrtc  (i8,x,i4) Start date (yyyymmdd/ddd) and time (ddd).
+YYYYMMDD2 0000         dystopc hrstopc  (i8,x,i4) End date (yyyymmdd/ddd) and time (ddd).
+LOW                   hilo    (a4)     Highs/lows (LOW or HIGH).
+1                     iopmax  (i3)     Open systems included (0=no, 1=yes).
+-60.                  latmin  (f10.5)  S'most latitude of search (limit -90.).
+0.                   latmax  (f10.5)  N'most latitude of search (limit +90.).
+0.                    lonmin  (f10.5)  W'most longitude of search (limit 0).
+360.                  lonmax  (f10.5)  E'most longitude of search (limit 360).
+15.                   sdrmx   (f10.5)  Max. dist. (deg.lat.) to minimum.   
+0.7                   drmx    (f10.5)  Max. jump (gr.units) for system search.
+5                     itmx    (i3)     Max. iterations for system search.
+4                     nshell  (i3)     No. of surrounding points for scanning.
+0.15                  cvmnc1  (f10.5)  Min. curv. (cvh) at systems centre (units/deg.lat.sq).
+0.15                  cvmnc2  (f10.5)  Min. curv. for av. deps. (units/deg.lat.sq).
+5.0                   cvarad  (f10.5)  Radius for finding curv.ave. (deg.lat.).
+0.9090909             cvawt   (f10.5)  Weighting of ave. (versus central) cv.
+0.                    fmax    (f10.5)  Max. f (units) (0 = no maximum).
+15.                   frmax   (f10.5)  Max. gradient of f at centre (open systems) (units/deg.lat.).
+15.                   frcmax  (f10.5)  Max. ratio of gradient to laplacian at centre (open systems) (units deg.lat.)
+0                     idiag   (i1)     Diagnostic mode activator.

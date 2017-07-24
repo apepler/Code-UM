@@ -1,0 +1,218 @@
+#!/bin/ksh
+#----------------------------------------------------------------------
+#
+#     SCRIPT: run_gcyc_mslp
+#
+#     FILE: run_gcyc_mslp
+#
+#     LANGUAGE: ksh
+#
+#     DESCRIPTION:
+#
+# 
+#     A script to find highs or lows in the 24 hourly POAMA mslp (/cas/climdata/NCEP.dir)
+#     The script uses the gcyc suite of programs to locate and track cyclones and generate
+#     time dependent statistics.
+#
+#     This script calculates seasonal cyclone tracks and stats from the 6 hourly data
+#
+#     HISTORY:
+#
+#     WRITTEN: K. Braganza (adapted from D. JONES, runplot_mslp_day)
+#     LAST CHANGE: 23/08/2013 by A Pepler.
+#
+#     Note: This is a cut-down version that only load the annual & djf data
+#     In all other ways, identical to run_gcyc_mslp1
+#
+#----------------------------------------------------------------------
+#     delete function for temporary files
+
+function check_delete {
+    if [[ -f $1 ]]; then
+	rm -f $1
+    fi
+}
+#----------------------------------------------------------------------
+bpath=/short/eg3/asp561/cts.dir/
+CYCBIN=$bpath/software.dir/cyc.dir/cycbin
+cyclocx=$CYCBIN/cycloc3x.hr
+trackx=$CYCBIN/trackx.hr
+trackmnx=$CYCBIN/trackmnx.hr
+tstatx=$CYCBIN/tstatx.hr
+spath=$bpath/Code-UM/code
+outdir=$bpath/gcyc_out/
+diagnostic=diagnostics.out
+
+#### Important settings
+datapath=/g/data2/ub7/access-s1/hc/raw_model/atmos/psl/daily
+firstyear=1990
+lastyear=2012
+
+rad=5
+CV=0.15
+proj=240
+NN=$((proj*2+1))
+if [[ $proj -le 100 ]] ; then
+  DFF=2.0
+else
+  DFF=0.5
+fi
+
+opath=$outdir/access-s1/proj${proj}_rad${rad%.*}cv${CV}/
+check_delete $diagnostic
+
+#----------------------------------------------------------------------
+
+type=low
+
+print "\nSCRIPT: runplot_mslp_day VERSION: 1.0"
+print "\nSCRIPT: runplot_mslp_day VERSION: 1.0" > $diagnostic
+
+#----------------------------------------------------------------------
+#     Obtain resolution for output and input file name.
+for option in "$@" ; do
+ case $option in
+
+   '-low' ) type=low;;
+
+  '-high' ) type=high;;
+
+ esac
+done
+
+# print $type  >> $diagnostic
+
+#----------------------------------------------------------------------
+
+echo "Beginning MAIN" >> $diagnostic
+
+set -A amonth zero 01 02 03 04 05 06 07 08 09 10 11 12
+set -A numdays zero 121 121 122 122 123 122 123 122 122 123 121 122
+## Runs for an extra day most months with February. This is not an issue.
+
+topo=$spath/ACCESS_topo
+### Loop through ensemble members
+
+for member in e01 e02 e03 e04 e05 e06 e07 e08 e09 e10 e11 ; do
+
+ iyear=$firstyear
+ while [[ $iyear -le $lastyear ]]; do
+ echo $iyear
+ for month in 5 ; do #1 2 3 4 5 6 7 8 9 10 11 12 ; do
+ for day in 01 ; do
+ indate=$iyear${amonth[$month]}$day
+ date1=$indate
+ daycount=${numdays[$month]}
+ gpath=$datapath/$member/
+
+echo $indate >> $diagnostic
+
+ if (( ($month > 9) )); then
+   yyyy=$(($iyear+1)) # Spills into following year
+   mmmm=$(($month-9))
+ else
+   yyyy=$iyear
+   mmmm=$(($month+3))
+ fi
+$bpath/Code-UM/getmonthyear $yyyy $mmmm 0 >> $diagnostic
+date2=`more getmonthyear.out | grep 'ENDDATE' | awk '{print $2}'`
+
+
+if [[ $iyear -eq 1999 || $iyear -eq 2000 ]] ; then
+    date1a=$((iyear-80))${amonth[$month]}$day
+    $bpath/Code-UM/getmonthyear $(($yyyy-80)) $mmmm 0 >> $diagnostic 
+    date2a=`more getmonthyear.out | grep 'ENDDATE' | awk '{print $2}'`
+    date1_loc2=${date1a:2:6}
+    date2_loc2=${date2a:2:6}
+else
+    date1_loc2=${date1:2:6}
+    date2_loc2=${date2:2:6}
+fi
+
+check_delete ingauscheck
+check_delete ingcycloc
+check_delete ingtrackcyc
+check_delete ingcycstats
+check_delete advstat
+check_delete loc_output
+
+check_delete tape1
+check_delete tape11
+
+
+#----------------------------------------------------------------------
+# set up output directories
+
+outpath=$opath/$member/
+mkdir -p $outpath
+
+print 'Output directories setted up.'
+print 'Proceeding to running script out.'
+
+#----------------------------------------------------------------------
+#     Simple processing script
+
+function runjob {
+#if [[ -s $infile ]]; then
+# print "/PROCESSING FOR $type/s FOR INPUT FILE: $infile"  >> $diagnostic
+#else
+# print "INPUT FILE DOES NOT EXSIST!: $infile"  >> $diagnostic
+# return
+#fi
+
+print "AUTOMATICALLY EDITING CONTROL FILES" >> $diagnostic
+# Added gausmake which makes the files
+
+sed -e "s/YYYYMMDD/$indate/" -e "s#DATADIR#$gpath#" -e "s#MEMBER#$member#" -e "s#DAYS#$daycount#" 24houraccess.ingausmake.4mon > ingausmake
+sed -e "s/YYMMDD1/$date1_loc2/" -e "s/YYMMDD2/$date2_loc2/" -e "s/NN/$NN/g" -e "s/DFF/$DFF/g" -e "s/PROJ/$proj/" -e "s/CVMIN/$CV/g" -e "s/CVRAD/$rad/g" 24houraccess.incycloc > incycloc 
+sed -e "s/YYMMDD1/$date1_loc2/" -e "s/YYMMDD2/$date2_loc2/" 6hourerai.intrack.kk > intrack
+
+check_delete tape1
+check_delete tape11
+
+print 'calling gausmake'
+
+if [[ $iyear -eq 1999 || $iyear -eq 2000 ]] ; then
+    $spath/gausmake_access spec
+else
+    $spath/gausmake_access norm
+fi
+cp tape11 monthfile
+
+print 'calling cycloc'
+$CYCBIN/cyclocx.hr -i incycloc -d 1 -c loc_output -z $topo monthfile >> stdout
+#$CYCBIN/cyclocx.hr -i incycloc -d 1 -c loc_output monthfile >> stdout
+
+print 'calling track'
+$CYCBIN/trackx.hr  -FO -i intrack -d 1 -c loc_output >> stdout
+touch trackfile
+cat thist?.1 > trackfile
+rm -f thist*
+
+ofile=$outpath/tracks_${indate}_4month.dat
+print 'calling awk'
+touch $ofile
+awk -f $spath/maketracks_UM.awk trackfile > $ofile
+
+}
+
+echo "Run Job" >> $diagnostic
+
+# Run the Job Function
+
+runjob
+
+ done # Day loop
+ done # Month loop
+ iyear=$(($iyear+1))
+ done # Year loop
+
+done # Member loop
+
+
+#----------------------------------------------------------------------
+# ausmap -U -v -g -B -T -K tape1 < incon_col_mslpo-sh
+
+echo "Finished Main" >> $diagnostic
+
+exit
