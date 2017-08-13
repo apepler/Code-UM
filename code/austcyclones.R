@@ -35,9 +35,11 @@ get_austevents<-function(yearS,yearE,output,type="high")
   {
     I=which(yy==yy2[1])
     data[I,3]=(data[I,3]%%10000) + (yearS-1)*10000
-    fixesDEC=data[I,]
     I=which(yy==yy2[2])
     data[I,3]=(data[I,3]%%10000) + yearS*10000
+
+    J=which(yy==yy2[1] | (data[,3]%%10000)==101) 
+    fixesDEC=data[J,]
     fixes<-data[I,]
   } else {
     data[,3]=(data[,3]%%10000) + yearS*10000
@@ -54,10 +56,11 @@ get_austevents<-function(yearS,yearE,output,type="high")
     {
      I=which(yy==yy2[1])
      data[I,3]=(data[I,3]%%10000) + (year[i]-1)*10000
-     fixesDEC=rbind(fixesDEC,data[I,])
-
      I=which(yy==yy2[2])
      data[I,3]=(data[I,3]%%10000) + year[i]*10000
+
+     J=which(yy==yy2[1] | (data[,3]%%10000)==101)
+     fixesDEC=rbind(fixesDEC,data[J,])
      fixes<-rbind(fixes,data[I,])
     } else {
      data[,3]=(data[,3]%%10000) + year[i]*10000
@@ -118,7 +121,7 @@ get_austevents<-function(yearS,yearE,output,type="high")
     events[J[i],6]=max(fixes[I,9]) ##Max curvature
     events[J[i],7]=min(fixes[I,2]) ##First fix # - for cross-year events
     events[J[i],8]=max(fixes[I,2]) ##Last fix #
-    events[J[i],9]=1 ##Ever in ECL region
+    events[J[i],9]=sum(fixes[I,14]) ##Ever in ECL region
     events[J[i],10]<-min(fixes[I,5] %% 10) ##Ever closed
     events[J[i],11]=max(fixes[I,8]*fixes[I,14]) # All outside region = 0
     events[J[i],12]=max(fixes[I,9]*fixes[I,14]) # All outside region = 0
@@ -135,6 +138,7 @@ get_austevents<-function(yearS,yearE,output,type="high")
   events2=events
   
   I<-which(events[,7]>1)
+  rlist=NaN
   ##Any case where the first fix is not fix #1
   I2=matrix(0,nrow=length(I),ncol=1)
   for(i in 1:length(I))
@@ -155,13 +159,16 @@ get_austevents<-function(yearS,yearE,output,type="high")
       if(type=="high") events2[M,5]=max(events[I[i],5],events[M,5]) else events2[M,5]=min(events[I[i],5],events[M,5])
       events2[M,6]=max(events[I[i],6],events[M,6])
       events2[M,8]=events[I[i],8]
-      events2[M,9]=max(events[I[i],9],events[M,9])
+      events2[M,9]=sum(events[I[i],9],events[M,9])
       events2[M,10]=min(events[I[i],10],events[M,10])
       if(type=="high") events2[M,11]=max(events[I[i],11],events[M,11]) else events2[M,11]=min(events[I[i],11],events[M,11])
       events2[M,12]=max(events[I[i],12],events[M,12])
- 
+
+      rlist=c(rlist,I[i]) 
     }
   }
+
+  if(length(rlist)>1) events2=events2[-rlist[!is.na(rlist)],]
   
   ##And remove the end-year events
   rm(fixesDEC)
@@ -187,11 +194,11 @@ get_austevents<-function(yearS,yearE,output,type="high")
   
   ##Convert to dataframe
   
-  Events<-data.frame(events3[,c(1:6,11:12)])
-  names(Events)=c('ID','Length','Date1','Date2','MSLP','CV',"Aust.MSLP","Aust.CV")
+  Events<-data.frame(events3[,c(1:6,9,11:12)])
+  names(Events)=c('ID','Length','Date1','Date2','MSLP','CV',"Aust.Length","Aust.MSLP","Aust.CV")
   
-  Fixes<-data.frame(fixes2[,1:9],fixes2[,14])
-  names(Fixes)=c('ID','Fix','Date','Time','Open','Lon','Lat','MSLP','CV','Location')
+  Fixes<-data.frame(fixes2[,1:14])
+  names(Fixes)=c('ID','Fix','Date','Time','Open','Lon','Lat','MSLP','CV',"Depth","Radius","Up","Vp",'Location')
   
   outF=paste(output,'_fixes.csv',sep="")
   outE=paste(output,'_events.csv',sep="")
@@ -201,7 +208,7 @@ get_austevents<-function(yearS,yearE,output,type="high")
 }
 
 setwd('/short/eg3/asp561/cts.dir/gcyc_out/NCEP1/proj100_highs_rad10cv0.075/')
-get_austevents(1950,1970,"UM_highs_5070",type="high")
-get_austevents(1970,1990,"UM_highs_7090",type="high")
-get_austevents(1990,2016,"UM_highs_9016",type="high")
+get_austevents(1950,2016,"UM_highs_NCEP1_proj100_rad10cv0.075",type="high")
 
+setwd('/short/eg3/asp561/cts.dir/gcyc_out/ERAI/proj100_highs_rad10cv0.075/')
+get_austevents(1980,2016,"UM_highs_ERAI_proj100_rad10cv0.075",type="high")

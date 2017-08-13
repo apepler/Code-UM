@@ -1,0 +1,288 @@
+#!/bin/ksh
+#----------------------------------------------------------------------
+#
+#     SCRIPT: run_gcyc_mslp
+#
+#     FILE: run_gcyc_mslp
+#
+#     LANGUAGE: ksh
+#
+#     DESCRIPTION:
+#
+# 
+#     A script to find highs or lows in the 24 hourly POAMA mslp (/cas/climdata/NCEP.dir)
+#     The script uses the gcyc suite of programs to locate and track cyclones and generate
+#     time dependent statistics.
+#
+#     This script calculates seasonal cyclone tracks and stats from the 6 hourly data
+#
+#     HISTORY:
+#
+#     WRITTEN: K. Braganza (adapted from D. JONES, runplot_mslp_day)
+#     LAST CHANGE: 23/08/2013 by A Pepler.
+#
+#     Note: This is a cut-down version that only load the annual & djf data
+#     In all other ways, identical to run_gcyc_mslp1
+#
+#----------------------------------------------------------------------
+#     delete function for temporary files
+
+function check_delete {
+    if [[ -f $1 ]]; then
+	rm -f $1
+    fi
+}
+#----------------------------------------------------------------------
+#cpath=/cas/opr/bin/
+basepath=/short/w97/asp561/CCRC-WRF_3.6.0.5_SEB_short/unsw-ccrc-wrf/runs/vortex-tracker/
+wpath=$basepath/run_ncep
+epath=$basepath/bin
+datapath=/g/data2/rr8/POAMA2/hindcast/e24
+opath=$basepath/gcyc_out
+rpath=$basepath/run_ncep/img
+
+stdout=$wpath/stdout.out
+stderr=$wpath/stderr.out
+
+diagnostic=$wpath/diagnostics.out
+
+check_delete $stdout
+check_delete $stderr
+check_delete $diagnostic
+
+#----------------------------------------------------------------------
+
+type=low
+
+print "\nSCRIPT: runplot_mslp_day VERSION: 1.0"
+print "\nSCRIPT: runplot_mslp_day VERSION: 1.0" > $diagnostic
+
+#----------------------------------------------------------------------
+#     Obtain resolution for output and input file name.
+for option in "$@" ; do
+ case $option in
+
+   '-low' ) type=low;;
+
+  '-high' ) type=high;;
+
+ esac
+done
+
+# print $type  >> $diagnostic
+
+#----------------------------------------------------------------------
+
+echo "Beginning MAIN" >> $diagnostic
+
+indate=20070606
+firstyear=2007
+lastyear=2007
+
+## Loop through the WRF versions
+
+for version in e24a ; do
+
+### Loop through ensemble members
+
+for member in e00 e01 e02 e03 e04 e05 e06 e07 e08 e09 e10 ; do
+
+# iyear=firstyear
+# while [[ $iyear -le $lastyear ]]; do
+# for month in 01 02 03 04 05 06 07 08 09 10 11 12 ; do
+# for day in 1 6 11 16 21 26 ; do
+# indate=$iyear$month$day
+
+gpath=$datapath/$version/$member/
+
+echo $indate >> $diagnostic
+date1=`date -d "$indate + 1 days" +%Y%m%d`
+date2=`date -d "$indate + 270 days" +%Y%m%d`
+
+echo $date1 $date2
+
+check_delete ingauscheck
+check_delete ingcycloc
+check_delete ingtrackcyc
+check_delete ingcycstats
+check_delete advstat
+check_delete loc_output
+
+check_delete getmonthyear.out
+check_delete tape1
+check_delete tape11
+
+check_delete cstat
+check_delete zstat
+check_delete trackfile
+check_delete advstat
+
+#----------------------------------------------------------------------
+# set up output directories
+
+outpath=$opath/$version/$member
+
+   if [[ -a $outpath && -d $outpath ]] ; then
+    outpath=$outpath
+   else
+    mkdir $outpath  2>> $stderr
+    outpath=$outpath
+   fi
+
+print 'Output directories setted up.'
+print 'Proceeding to running script out.'
+
+#----------------------------------------------------------------------
+#     Simple processing script
+
+function runjob {
+#if [[ -s $infile ]]; then
+# print "/PROCESSING FOR $type/s FOR INPUT FILE: $infile"  >> $diagnostic
+#else
+# print "INPUT FILE DOES NOT EXSIST!: $infile"  >> $diagnostic
+# return
+#fi
+
+print "AUTOMATICALLY EDITING CONTROL FILES" >> $diagnostic
+# Added gausmake which makes the files
+print $date1
+print $date2
+print $gpath
+
+sed -e "s/YYYYMMDD/$indate/" -e "s#DATADIR#$gpath#" 24hourpoama.proof.ingausmake > ingausmake
+sed -e "s/YYYYMMDD1 0000/$date1 0000/" -e "s/YYYYMMDD2 0000/$date2 0000/" 24hourpoama.proof.ingauscheck > ingauscheck
+sed -e "s/YYYYMMDD1 0000/$date1 0000/" -e "s/YYYYMMDD2 0000/$date2 0000/" 24hourpoama.proof.ingcycloc_$type > ingcycloc
+sed -e "s/YYYYMMDD1 0000/$date1 0000/" -e "s/YYYYMMDD2 0000/$date2 0000/" 24hourpoama.proof.ingtrackcyc > ingtrackcyc
+
+sed -e "s/YYYYMMDD1 0000/$date1 0000/" -e "s/YYYYMMDD2 0000/$date2 0000/" 24hourpoama.proof.ingcycstats > ingcycstats
+
+cp -rf 6hourncep.proof.advstat_$type advstat
+
+check_delete tape1
+
+#cp monthfile tape1
+
+# Run file check
+
+check_delete tape11
+
+$epath/gausmake_poama
+
+## Turns the NCEP files corresp to YYMMDD1 - YYMMDD2 to an ausmap cat file
+## Added by A Pepler
+cp tape11 monthfile
+mv tape11 tape1 1>> $stdout 2>> $stderr
+
+## Checks
+
+$epath/gauscheck tape1 1>> $stdout 2>> $stderr
+
+mv tape11 tape1 1>> $stdout 2>> $stderr
+# Run cyc locater
+
+$epath/gcycloc tape1 1>> $stdout 2>> $stderr
+
+cp -rf tape11 loc_output
+
+#mv tape11 $outpath/mslpo.$date1_loc$date2_loc.00001800.gcycloc
+#mv tape13 $outpath/mslpo.$date1_loc$date2_loc.00001800.gcycfield
+
+# Run cyc tracker and stats
+# three iterations to converge the advstat climatology file
+
+print 'calling trackcyc'
+$epath/gtrackcyc loc_output 1>> $stdout 2>> $stderr
+print 'called trackcyc'
+$epath/gcycstats tape11 1>> $stdout 2>> $stderr
+
+# Output of gtrackcyc is tape11?
+# copy to file
+
+#cp tape11 $outpath/mslpo.$date1_loc$date2_loc.00001800.gtrackcyc
+
+# contents of cstat file (ausmap format)
+
+# MAP:   1 : LOW       MSLP        CENT. INTENSITY    (hPa)     19800101    0 19800131 1800  
+# MAP:   2 : LOW       MSLP        CENT. TENDENCY     (hPa)/DAY 19800101    0 19800131 1800  
+# MAP:   3 : LOW       MSLP        SYSTEM DENSITY    /100*DLSQ  19800101    0 19800131 1800  
+# MAP:   4 : LOW       MSLP        EAST TRANSPORT    /100DLTDAY 19800101    0 19800131 1800  
+# MAP:   5 : LOW       MSLP        NORTH. TRANSPORT  /100DLTDAY 19800101    0 19800131 1800  
+# MAP:   6 : LOW       MSLP        NETT TRANSPORT    /DEGLATDAY 19800101    0 19800131 1800  
+# MAP:   7 : LOW       MSLP        VELOCITY          M/SEC.     19800101    0 19800131 1800  
+# MAP:   8 : LOW       MSLP        ZONAL VEL         M/SEC.     19800101    0 19800131 1800  
+# MAP:   9 : LOW       MSLP        MERIDIONAL VEL    M/SEC.     19800101    0 19800131 1800  
+# MAP:  10 : LOW       MSLP        GENESIS DENSITY   /100DSQDAY 19800101    0 19800131 1800  
+# MAP:  11 : LOW       MSLP        DECAY DENSITY     /100DSQDAY 19800101    0 19800131 1800  
+# MAP:  12 : LOW       MSLP        CYCLONICITY       HOURS      19800101    0 19800131 1800  
+
+# grab the cyclone density and central intensity from cstat and write to indiv ausmap files using selectc
+
+#check_delete tape11
+#check_delete in.selectc
+
+#echo 1 > in.selectc
+#echo q >> in.selectc
+#$cpath/selectc cstat < in.selectc 1>> $stdout 2>> $stderr
+
+#cp -rf tape11 $outpath/mslpo.$date1_stats$date2_stats.00001800.centint  1>> $stdout 2>> $stderr
+
+#check_delete tape11
+#check_delete in.selectc
+
+#echo 3 > in.selectc
+#echo q >> in.selectc
+#$cpath/selectc cstat < in.selectc 1>> $stdout 2>> $stderr
+
+
+#cp -rf tape11 $outpath/mslpo.$date1_stats$date2_stats.00001800.density 1>> $stdout 2>> $stderr
+check_delete tape11
+check_delete in.selectc
+
+#echo 12 > in.selectc
+#echo q >> in.selectc
+#$cpath/selectc cstat < in.selectc 1>> $stdout 2>> $stderr
+
+#cp -rf tape11 $outpath/mslpo.$date1_stats$date2_stats.00001800.cyclonicity  1>> $stdout 2>> $stderr
+
+check_delete tape11
+check_delete in.selectc
+
+awk -f maketracks.awk trackfile > $outpath/tracks_${indate}.dat
+
+#mv cstat $outpath/mslpo.$date1_stats$date2_stats.00001800.cstat
+#mv trackfile $outpath/mslpo.$date1_stats$date2_stats.00001800.trackfile
+# mv zstat $outpath/mslpo.$date1_stats$date2_stats.00001800.zstat
+# mv advstat $outpath/mslpo.$date1_stats$date2_stats.00001800.advstat
+
+check_delete cstat
+check_delete zstat
+check_delete advstat
+check_delete trackfile
+
+check_delete tape11
+check_delete tape1
+
+}
+
+echo "Run Job" >> $diagnostic
+
+# Run the Job Function
+
+runjob
+
+# done # Day loop
+# done # Month loop
+# $iyear=$(($iyear+1))
+print $iyear
+# done # Year loop
+
+done # Member loop
+done # Version loop
+
+
+#----------------------------------------------------------------------
+# ausmap -U -v -g -B -T -K tape1 < incon_col_mslpo-sh
+
+echo "Finished Main" >> $diagnostic
+
+exit

@@ -84,5 +84,7 @@ nc_close(ncout)
 #extract_counts(1990,2012,type="low",dir="/short/eg3/asp561/cts.dir/gcyc_out/ERAI/proj240_rad5cv0.15/",thresh=0.15)
 
 #extract_counts(1980,2016,type="high",dir="/short/eg3/asp561/cts.dir/gcyc_out/ERAI/proj100_highs_rad5cv0.075/",thresh=0.15,dur=3)
-extract_counts(1950,2016,type="high",dir="/short/eg3/asp561/cts.dir/gcyc_out/NCEP1/proj100_highs_rad10cv0.075/",thresh=0.075,dur=3)
+#extract_counts(1950,2016,type="low",dir="/short/eg3/asp561/cts.dir/gcyc_out/NCEP1/proj100_rad5cv0.15/",thresh=0.15)
+#extract_counts(1950,2016,type="low",dir="/short/eg3/asp561/cts.dir/gcyc_out/NCEP1/proj100_rad5cv0.15/",thresh=0.15,dur=3)
 
+extract_counts(1990,2013,type="low",dir="/short/eg3/asp561/cts.dir/gcyc_out/ERAI/daily_proj240_rad5cv0.15/")

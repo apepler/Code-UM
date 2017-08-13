@@ -14,8 +14,8 @@ library(ncdf4)
 ACCESS_ECLs_4month<-function(year1,year2,inday,dir="../gcyc_out/access-s1/proj100_rad5cv0.15/",thresh=0.15)
 {
 years=seq(year1,year2,1)
-#months=1:12
-months=5 ## For the test version
+months=1:12
+#months=5 ## For the test version
 members=paste("e",sprintf(0:10,fmt="%2.2d"),sep="")
 
 lat=seq(-89.5,89.5,1)
@@ -27,6 +27,7 @@ cyclones<-array(0,c(length(lon),length(lat),length(years),length(months),length(
 
 for(y in 1:length(years))
 for(m in 1:length(months))
+if(m!=4) ## Excluding April because not run yet. At least can analyse the rest
 for(e in 1:length(members))
 {
 indate=paste(years[y],sprintf("%02d",months[m]),sprintf("%02d",inday),sep="")
@@ -81,4 +82,4 @@ nc_close(ncout)
 } # End function
 
 
-ACCESS_ECLs_4month(1990,2012,1,dir="../gcyc_out/access-s1/proj240_rad5cv0.15/",thresh=0.15)
+ACCESS_ECLs_4month(1990,2012,1,dir="/short/eg3/asp561/cts.dir/gcyc_out/access-s1/proj240_rad5cv0.15/",thresh=0.25)
