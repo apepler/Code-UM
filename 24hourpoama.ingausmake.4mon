@@ -1,0 +1,12 @@
+INGAUSMAKE PARAMETERS:                               
+                                                                
+PMSL                            vtype  (a8)  Quantity (e.g.'Z0500','MSLP')
+POAMA-2                           rtype  (a5)   Source (e.g. GASP)
+MB                              vunit  (a8)   Units
+2.5x2.5                            gtype  (a10)  Grid resolution
+YYYYMMDD                        dystrt (i8)   Initialised date
+DAYS                            hint   (i2)   Number of daily measurements 
+144                             ilon   (i3)   Length of longitudes
+72                             jlat   (i3)   Length of latitudes
+MEMBER
+DATADIR                         
