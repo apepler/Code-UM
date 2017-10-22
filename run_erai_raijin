@@ -40,13 +40,13 @@ check_delete $stderr
 check_delete $diagnostic
 
 #### Important settings
-#datapath=/g/data2/ub7/access-s1/hc/raw_model/atmos/psl/daily
-firstyear=1991
-lastyear=2012
+datapath=/g/data1/ub4/erai/netcdf/6hr/atmos/oper_an_sfc/v01/psl/
+firstyear=1979
+lastyear=2016
 
 rad=5
 CV=0.15
-proj=240
+proj=100
 NN=$((proj*2+1))
 if [[ $proj -le 100 ]] ; then
   DFF=2.0
@@ -54,7 +54,7 @@ else
   DFF=0.5
 fi
 
-outpath=$outdir/ERAI/proj${proj}_rad${rad%.*}cv${CV}/
+outpath=$outdir/ERAI/proj${proj}_lows_rad${rad%.*}cv${CV}_notopo/
 check_delete $diagnostic
 
 #----------------------------------------------------------------------
@@ -84,7 +84,12 @@ while [[ $iyear -le $lastyear ]]; do
 dname="ann"
 
 echo $iyear $dname >> $diagnostic
-date1_loc=$(($iyear-1))1201
+
+if [[ $iyear -eq 1979 ]] ; then
+  date1_loc=$(($iyear))0101
+else
+  date1_loc=$(($iyear-1))1201
+fi
 date2_loc=$(($iyear))1231
 
 echo 'date1 loc = ' $date1_loc >> $diagnostic 
@@ -154,8 +159,8 @@ fi
 cp tape11 monthfile
 
 print 'calling cycloc'
-$CYCBIN/cycloc3x.hr -i incycloc -c loc_output -z $spath/ERAI_topo_raijin monthfile >> $stdout
-#$CYCBIN/cycloc3x.hr -i incycloc -d 1 -c loc_output monthfile #>> $stdout
+#$CYCBIN/cycloc3x.hr -i incycloc -c loc_output -z $spath/ERAI_topo_raijin monthfile >> $stdout
+$CYCBIN/cycloc3x.hr -i incycloc -d 1 -c loc_output monthfile >> $stdout
 #cp loc_output $outpath/mslpo.$date1_loc$date2_loc.00001800.gcycloc
 
 print 'calling track'
@@ -163,7 +168,7 @@ $CYCBIN/trackx.hr  -FO -i intrack -c loc_output >> $stdout
 touch trackfile
 cat thist?.1 > trackfile
 rm -f thist*
-#cp trackfile $outpath/mslpo.$date1_loc$date2_loc.00001800.trackfile
+cp trackfile $outpath/mslpo.$date1_loc$date2_loc.00001800.trackfile
 
 ofile=$outpath/tracks_${iyear}.dat
 print 'calling awk'

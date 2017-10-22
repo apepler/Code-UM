@@ -41,11 +41,12 @@ check_delete $diagnostic
 
 #### Important settings
 datapath=/g/data1/ub4/erai/netcdf/6hr/atmos/oper_an_sfc/v01/psl/
-firstyear=2013
+firstyear=1991
 lastyear=2013
 
-rad=5
-CV=0.15
+type=high
+rad=10
+CV=0.075
 proj=240
 NN=$((proj*2+1))
 if [[ $proj -le 100 ]] ; then
@@ -54,12 +55,10 @@ else
   DFF=0.5
 fi
 
-outpath=$outdir/ERAI/daily_proj${proj}_rad${rad%.*}cv${CV}/
+outpath=$outdir/ERAI/daily_proj${proj}_${type}s_rad${rad%.*}cv${CV}/
 check_delete $diagnostic
 
 #----------------------------------------------------------------------
-
-type=low
 
 print "\nSCRIPT: runplot_mslp_day VERSION: 1.0"
 print "\nSCRIPT: runplot_mslp_day VERSION: 1.0" > $diagnostic
@@ -139,7 +138,7 @@ function runjob {
 print "AUTOMATICALLY EDITING CONTROL FILES" >> $diagnostic
 # Added gausmake which makes the files
 sed -e "s/YYYYMMDD1/$date1_loc/" -e "s/YYYYMMDD2/$date2_loc/" 6hourerai.ingausmake.kk > ingausmake
-sed -e "s/YYMMDD1/$date1_loc2/" -e "s/YYMMDD2/$date2_loc2/" -e "s/NN/$NN/g" -e "s/DFF/$DFF/g" -e "s/PROJ/$proj/" -e "s/CVMIN/$CV/g" -e "s/CVRAD/$rad/g" 24houraccess.incycloc > incycloc
+sed -e "s/YYMMDD1/$date1_loc2/" -e "s/YYMMDD2/$date2_loc2/" -e "s/NN/$NN/g" -e "s/DFF/$DFF/g" -e "s/PROJ/$proj/" -e "s/CVMIN/$CV/g" -e "s/CVRAD/$rad/g" 6hourerai.${type}.incycloc > incycloc
 sed -e "s/YYMMDD1/$date1_loc2/" -e "s/YYMMDD2/$date2_loc2/" 6hourerai.intrack.kk > intrack
 
 check_delete tape1

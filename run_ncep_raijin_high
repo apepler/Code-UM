@@ -54,7 +54,7 @@ else
   DFF=0.5
 fi
 
-outpath=$outdir/NCEP1/proj${proj}_highs_rad${rad%.*}cv${CV}/
+outpath=$outdir/NCEP1/proj${proj}_highs_rad${rad%.*}cv${CV}_v2/
 check_delete $diagnostic
 
 #----------------------------------------------------------------------

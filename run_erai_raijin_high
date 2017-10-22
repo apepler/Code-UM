@@ -41,10 +41,10 @@ check_delete $diagnostic
 
 #### Important settings
 #datapath=/g/data2/ub7/access-s1/hc/raw_model/atmos/psl/daily
-firstyear=1980
+firstyear=2016
 lastyear=2016
 
-rad=5
+rad=10
 CV=0.075
 proj=100
 NN=$((proj*2+1))
@@ -54,7 +54,7 @@ else
   DFF=0.5
 fi
 
-outpath=$outdir/ERAI/proj${proj}_highs_rad${rad%.*}cv${CV}/
+outpath=$outdir/ERAI/proj${proj}_highs_rad${rad%.*}cv${CV}_notopo/
 check_delete $diagnostic
 
 #----------------------------------------------------------------------
@@ -154,8 +154,8 @@ fi
 cp tape11 monthfile
 
 print 'calling cycloc'
-$CYCBIN/cycloc3x.hr -i incycloc -c loc_output -z $spath/ERAI_topo_raijin monthfile >> $stdout
-#$CYCBIN/cycloc3x.hr -i incycloc -d 1 -c loc_output monthfile #>> $stdout
+#$CYCBIN/cycloc3x.hr -i incycloc -c loc_output -z $spath/ERAI_topo_raijin monthfile >> $stdout
+$CYCBIN/cycloc3x.hr -i incycloc -d 1 -c loc_output monthfile >> $stdout
 #cp loc_output $outpath/mslpo.$date1_loc$date2_loc.00001800.gcycloc
 
 print 'calling track'
@@ -165,13 +165,14 @@ cat thist?.1 > trackfile
 rm -f thist*
 #cp trackfile $outpath/mslpo.$date1_loc$date2_loc.00001800.trackfile
 
-ofile=$outpath/tracks_${iyear}.dat
+#ofile=$outpath/tracks_${iyear}.dat
+ofile=track_out.dat
 print 'calling awk'
 touch $ofile
 awk -f $spath/maketracks_UM.awk trackfile > $ofile
 
 check_delete tape11
-check_delete trackfile
+#check_delete trackfile
 check_delete monthfile
 check_delete $stdout
 

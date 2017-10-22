@@ -10,4 +10,5 @@ YYYYMMDD2                       dystop (i8)   End date (yyyymmdd)
 18                              hrstop (i2)   Start hour (hh)
 4                               hint   (i2)   Number of daily measurements 
 144                             ilon   (i3)   Length of longitudes
-73                             jlat   (i3)   Length of latitudes 
+73                             jlat   (i3)   Length of latitudes
+/g/data1/eg3/asp561/NCEP1/ 

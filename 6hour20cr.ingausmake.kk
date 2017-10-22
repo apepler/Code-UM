@@ -12,3 +12,4 @@ YYYYMMDD2                       dystop (i8)   End date (yyyymmdd)
 180                             ilon   (i3)   Length of longitudes
 91                             jlat   (i3)   Length of latitudes 
 ENS                             member (i3)  Ensemble member used
+DIR

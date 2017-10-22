@@ -2,7 +2,7 @@
             rdiff=DFF, rdifz=DFF
  &end
 
- &nmlcycloc ddhmmn=000600, ddhmmx=010000,
+ &nmlcycloc ddhmmn=000600, ddhmmx=010600,
             dastrt=YYMMDD1, dastop=YYMMDD2, hrstrt=0000, hrstop=0000,
             iopmxc=1, istmxc=11, nshell=4, sdrmx=10.,
             drmx1=0.7, drmx2=0.3, itmx1=20, itmx2=20, diflt1=2.,diflt2=2.,

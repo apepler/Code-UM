@@ -41,8 +41,8 @@ check_delete $diagnostic
 
 #### Important settings
 #datapath=/g/data2/ub7/access-s1/hc/raw_model/atmos/psl/daily
-firstyear=1950
-lastyear=2016
+firstyear=2017
+lastyear=2017
 
 rad=5
 CV=0.15
@@ -54,7 +54,7 @@ else
   DFF=0.5
 fi
 
-outpath=$outdir/NCEP1/proj${proj}_rad${rad%.*}cv${CV}/
+outpath=$outdir/NCEP1/proj${proj}_lows_rad${rad%.*}cv${CV}_v2/
 check_delete $diagnostic
 
 #----------------------------------------------------------------------
@@ -168,12 +168,14 @@ rm -f thist*
 ofile=$outpath/tracks_${iyear}.dat
 print 'calling awk'
 touch $ofile
+#cp trackfile $outpath/tracks_${iyear}_origformat.dat
 awk -f $spath/maketracks_UM.awk trackfile > $ofile
 
 check_delete tape11
 check_delete trackfile
 check_delete monthfile
 check_delete $stdout
+check_delete loc_output
 
 }
 
