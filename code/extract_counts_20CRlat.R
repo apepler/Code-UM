@@ -10,23 +10,25 @@
 ## Option to set a higher intensity threshold
 
 library(ncdf4)
-extract_counts<-function(year1,year2,type="low",dir="/short/eg3/asp561/cts.dir/gcyc_out",thresh=0,dur=NA,outf=NA)
+extract_counts<-function(year1,year2,type="low",dir="/short/eg3/asp561/cts.dir/gcyc_out",proj="proj100_highs_rad10cv0.075/",thresh=0,dur=NA,outf=NA)
 {
 years=seq(year1,year2,1)
 months=1:12
 
 lat=seq(-89.5,89.5,1)
 lon=seq(0.5,359.5,1)  ### Can always combine into bigger cells later
-systems<-array(0,c(length(lon),length(lat),length(years),12))
+systems<-array(0,c(length(lat),length(years),12,57))
 
 for(y in 1:length(years))
 {
 print(years[y])
-fname=paste(dir,"/tracks_",years[y],".dat",sep="")
+for(n in 1:56)
+{
+fname=paste(dir,proj,"/tracks_",years[y],"_",n,".dat",sep="")
 read.table(fname, sep="",skip=1)->fixes
 colnames(fixes)=c("ID","Fix","Date","Time","Open","Lon","Lat","MSLP","CV","Meh")
 fixes$Year=floor(fixes$Date/10000)
-fixes=fixes[fixes$Year==unique(fixes$Year)[2],]
+if(length(unique(fixes$Year))>1) fixes=fixes[fixes$Year==unique(fixes$Year)[2],]
 fixes$Month=floor(fixes$Date/100)%%100
 fixes$Lat2=floor(fixes$Lat)
 fixes$Lon2=floor(fixes$Lon)%%360
@@ -43,10 +45,34 @@ if(type=="high") fixes$CV=-fixes$CV
   fixes=fixes[J,]
   }
 fixes=fixes[fixes$CV>=thresh,]
-tmp=table(factor(fixes$Lon2,levels=0:359),factor(fixes$Lat2,levels=-90:89),fixes$Month)
-systems[,,y,]=tmp
-print(mean(systems[,,y,],na.rm=T))
-} # End year loop
+tmp=table(factor(fixes$Lat2,levels=-90:89),fixes$Month)
+systems[,y,,n]=tmp
+} # End members
+
+fname=paste(dir,"EnsMean/",proj,"/tracks_",years[y],".dat",sep="")
+read.table(fname, sep="",skip=1)->fixes
+colnames(fixes)=c("ID","Fix","Date","Time","Open","Lon","Lat","MSLP","CV","Meh")
+fixes$Year=floor(fixes$Date/10000)
+if(length(unique(fixes$Year))>1) fixes=fixes[fixes$Year==unique(fixes$Year)[2],]
+fixes$Month=floor(fixes$Date/100)%%100
+fixes$Lat2=floor(fixes$Lat)
+fixes$Lon2=floor(fixes$Lon)%%360
+if(type=="high") fixes$CV=-fixes$CV
+
+ if(!is.na(dur))
+  {
+  x<-rle(fixes$ID)
+  events<-cbind(x$values,x$lengths,matrix(data=0,nrow=length(x$values),ncol=1))
+  events=events[events[,2]>=dur,]
+  include<-match(fixes[,1],events[,1])
+  J<-which(is.na(include)==0)
+  fixes=fixes[J,]
+  }
+fixes=fixes[fixes$CV>=thresh,]
+tmp=table(factor(fixes$Lat2,levels=-90:89),fixes$Month)
+systems[,y,,57]=tmp
+
+} # End years
 
 ## Write a netcdf file with cyclones - so can read later
 
@@ -59,9 +85,10 @@ dimX<-ncdim_def("lon","degrees_E",lon)
 dimY<-ncdim_def("lat","degrees_N",lat)
 dimT1<-ncdim_def("year","years",years)
 dimT2<-ncdim_def("month","months",months)
+dimN<-ncdim_def("member","count",c(1:56,0))
 
 fillvalue <- 1e32
-cyc_def <- ncvar_def("systems","count",list(dimX,dimY,dimT1,dimT2),fillvalue,paste("Number of",type,"pressure systems during each month for each location in the Australian region"),prec="single")
+cyc_def <- ncvar_def("systems","count",list(dimY,dimT1,dimT2,dimN),fillvalue,paste("Number of",type,"pressure systems during each month for each latitude"),prec="single")
 
 # create netCDF file and put arrays
 if(!is.na(outf)) ncfname <- paste(dir,outf,sep="") else
@@ -72,30 +99,22 @@ ncout <- nc_create(ncfname,cyc_def) #force_v4=T)
 ncvar_put(ncout,cyc_def,systems)
 
 # put additional attributes into dimension and data variables
-ncatt_put(ncout,"lon","axis","X") #,verbose=FALSE) #,definemode=FALSE)
+#ncatt_put(ncout,"lon","axis","X") #,verbose=FALSE) #,definemode=FALSE)
 ncatt_put(ncout,"lat","axis","Y")
 ncatt_put(ncout,"year","axis","T1")
 ncatt_put(ncout,"month","axis","T2")
-
+ncatt_put(ncout,"member","axis","N")
 nc_close(ncout)
 
 } # End function
 
-extract_counts(1990,2013,type="high",thresh=0.075,
-    dir="/short/eg3/asp561/cts.dir/gcyc_out/ERAI/daily_proj240_highs_rad10cv0.075/",
-    outf="ERAIdaily_UM_globalanticyclones_proj240_rad10cv0.075.nc")
+extract_counts(1851,2014,type="high",thresh=0.075,dur=2,
+    dir="/short/eg3/asp561/cts.dir/gcyc_out/20CR/",proj="proj100_highs_rad10cv0.075/",
+    outf="20CR_UM_anticyclonelats_proj100_rad10cv0.075_D2.nc")
 
-extract_counts(1990,2013,type="low",thresh=0.15,
-    dir="/short/eg3/asp561/cts.dir/gcyc_out/ERAI/daily_proj240_lows_rad5cv0.15/",
-    outf="ERAIdaily_UM_globalcyclones_proj240_rad5cv0.15.nc")
-
-#extract_counts(1950,2016,type="high",thresh=0.075,dur=2,
-#    dir="/short/eg3/asp561/cts.dir/gcyc_out/NCEP1/proj100_highs_rad10cv0.075_v2/",
-#    outf="NCEP1_UM_globalanticyclones_proj100_rad10cv0.075_D2.nc")
-
-#extract_counts(1950,2016,type="low",thresh=0.15,dur=2,
-#    dir="/short/eg3/asp561/cts.dir/gcyc_out/NCEP1/proj100_lows_rad5cv0.15_v2/",
-#    outf="NCEP1_UM_globalcyclones_proj100_rad5cv0.15_D2.nc")
+extract_counts(1851,2014,type="low",thresh=0.15,dur=2,
+    dir="/short/eg3/asp561/cts.dir/gcyc_out/20CR/",proj="proj100_lows_rad5cv0.15/",
+    outf="20CR_UM_cyclonelats_proj100_rad5cv0.15_D2.nc")
 
 
 

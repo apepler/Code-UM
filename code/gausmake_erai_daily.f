@@ -258,10 +258,10 @@ c      print *, ny,nm,nd,start(3),work(1,1),x(1,1),maxval(x)
 CC Create the header line
       if (spec.eq.'norm') then
          write(header,1001)
-     $   vtype,rtype,ny,nm,nd,100*nh,vunits,gtype
+     $   vtype,rtype,ny,nm,nd,0,vunits,gtype
       else if (spec.eq.'spec') then
          write(header,1001)
-     $   vtype,rtype,ny-80,nm,nd,100*nh,vunits,gtype
+     $   vtype,rtype,ny-80,nm,nd,0,vunits,gtype
       else
        print *, 'Error - special or normal?'
       endif

@@ -24,7 +24,7 @@ get_austevents<-function(yearS,yearE,output,type="high")
   ##Files with ECL track data for required years & preceding summers.  
   year<-seq(yearS,yearE)
   fname1=paste('tracks_',as.character(year),'.dat',sep="")
-
+  print(fname1[1])
   ##collates all the annual tracks into one file
   ##And the extra ones at the start into a "Dec" file
 
@@ -49,6 +49,7 @@ get_austevents<-function(yearS,yearE,output,type="high")
 
   for(i in 2:length(year))
   {
+    print(fname1[i])
     read.table(fname1[i], sep="",skip=0)->data
     yy=floor(data[,3]/10000)
     yy2=unique(yy)
@@ -207,8 +208,16 @@ get_austevents<-function(yearS,yearE,output,type="high")
   write.csv(Events,outE)
 }
 
-setwd('/short/eg3/asp561/cts.dir/gcyc_out/NCEP1/proj100_highs_rad10cv0.075/')
-get_austevents(1950,2016,"UM_highs_NCEP1_proj100_rad10cv0.075",type="high")
+#setwd('/short/eg3/asp561/cts.dir/gcyc_out/NCEP1/proj100_highs_rad10cv0.075_v2/')
+#get_austevents(1950,2016,"UM_highs_NCEP1_proj100_rad10cv0.075",type="low")
 
-setwd('/short/eg3/asp561/cts.dir/gcyc_out/ERAI/proj100_highs_rad10cv0.075/')
-get_austevents(1980,2016,"UM_highs_ERAI_proj100_rad10cv0.075",type="high")
+setwd('/short/eg3/asp561/cts.dir/gcyc_out/NCEP1/proj100_lows_rad5cv0.15_v2/')
+get_austevents(2016,2017,"UM_lows_NCEP1_proj100_rad5cv0.15_update",type="low")
+
+#setwd('/short/eg3/asp561/cts.dir/gcyc_out/ERAI/proj100_lows_rad5cv0.15/')
+#get_austevents(1980,2016,"UM_lows_ERAI_proj100_rad5cv0.15",type="low")
+
+#setwd('/short/eg3/asp561/cts.dir/gcyc_out/20CR/EnsMean/proj100_lows_rad5cv0.15/')
+#get_austevents(1950,1979,"UM_lows_20CR_proj100_rad5cv0.15_5079",type="high")
+#get_austevents(1980,2014,"UM_lows_20CR_proj100_rad5cv0.15_8014",type="low")
+

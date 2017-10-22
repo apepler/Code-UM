@@ -75,8 +75,8 @@ c----------------------------------------------------------------------
       integer ny,nm,nd,nh,hint,yr1,yr2,mm1,mm2,yy,yd,dlen
       integer i,j,k,iunit,icode,inet,inet2,inet3,latv,lonv
       integer ncopn,ncvid,utopen 
-      character*80 instfile,ofile,ohead,path,name
-      character*200 ifile,ifile2,ifile3
+      character*80 instfile,ofile,ohead,name
+      character*200 ifile,ifile2,ifile3,path
       real*8 lat1(500),lon1(500)
       
 
@@ -87,7 +87,8 @@ c----------------------------------------------------------------------
 
       instfile = 'ingausmake'
       ofile    = 'tape11'
-      path = '/srv/ccrc/data34/z3478332/NCEP/'
+c      path = '/g/data1/eg3/asp561/NCEP1/'
+c      path = '/srv/ccrc/data34/z3478332/NCEP/'
 c  Assumes a file of format 'name',year,'.nc'. Eg slp.2008.nc
       name='slp.'
       
@@ -101,15 +102,17 @@ c------------------------------------------------------------
 c      Read instruction file.
 c------------------------------------------------------------
       read(3,10)vtype,rtype,vunits,gtype,
-     & dystrt,hrstrt,dystop,hrstop,hint,ilon,jlat
+     & dystrt,hrstrt,dystop,hrstop,hint,ilon,jlat,path
       close(3)
-10    format (//a8/a5/a8/a10/i8/i2/i8/i2/i2/i3/i3)
+10    format (//a8/a5/a8/a10/i8/i2/i8/i2/i2/i3/i3/a80)
 
 c------------------------------------------------------------
 
 c------------------------------------------------------------
 c     Convert start & end date to list of dates
 c------------------------------------------------------------
+
+c      print *, path
 cc Convert into yr1, mm1 & yy2, mm2
 
       yr1= floor(real(dystrt)/10000.0)
@@ -124,7 +127,7 @@ cc Call the first year's netcdf file. Extract lat & lon
 
       yd=yr2-yr1
       if (yd.eq.0) then 
-      
+ 
 cc Call the year's netcdf file. Extract lat & lon      
          write(ifile,'(a,a,i4,a3)')trim(path)
      &   ,trim(name),yr1,'.nc'
@@ -154,7 +157,7 @@ cc loop on months/day/hours to extract & write code
          call ncvgt(inet,latv,1,jlat,latitude,icode)
          lonv=ncvid(inet,'lon',icode)
          call ncvgt(inet,lonv,1,ilon,longitude,icode)   
-         
+
 cc Also call netcdf file for year 2         
          
          write(ifile2,'(a,a,i4,a3)')trim(path)
@@ -253,8 +256,8 @@ CC Declare all the internal variables
       real x(ilon,jlat)
       real x2(ilon,jlat)
       real latitude2(jlat)
-      real xscale,xoff
-      integer*2 work(ilon,jlat)
+c      real xscale,xoff
+      real work(ilon,jlat)
       integer it,ot,tt,tlen,tvar,icode,ny,nm,nd,nh
       integer inet,iunit,ivar
       integer*2 miss
@@ -281,11 +284,7 @@ CC  This has been amended to also extract the wanted level (2=925)
       
       ivar=ncvid(inet,'slp',icode)
       call ncvgt(inet,ivar,start,count,work,icode)
-      call ncagt(inet,ivar,'scale_factor',xscale,icode)
-      call ncagt(inet,ivar,'add_offset',xoff,icode)
-      call ncagt(inet,ivar,'missing_value',miss,icode)
-      call unpack(work,x,xscale,xoff,miss,ilon,jlat)
-
+      x = work/100.
 CC Create the header line      
       if (spec.eq.'norm') then 
          write(header,1001)

@@ -83,7 +83,7 @@ c----------------------------------------------------------------------
       integer dylast,hrlast,hours,sres
       integer ny,nm,nd,nh,hint,yr1,yr2,mm1,mm2,yy,yd,dlen
       integer i,j,k,iunit,icode,inet,inet2,inet3,latv,lonv
-      integer ncopn,ncvid,utopen 
+      integer ncopn,ncvid,utopen,dum 
       character*80 instfile,ofile,ohead,path,name
       character*200 ifile,ifile2,ifile3
       
@@ -95,7 +95,8 @@ c----------------------------------------------------------------------
 
       instfile = 'ingausmake'
       ofile    = 'tape11'
-      path = '/srv/ccrc/data34/z3478332/20CR/v2c/'
+c      path = '/srv/ccrc/data34/z3478332/20CR/v2c/'
+c      path = '/g/data/eg3/asp561/20CRv2c/EnsMean/'
 
 c  Assumes a file of format 'name',year,'.nc'. Eg prmsl_2008.nc
       name='prmsl.'
@@ -112,9 +113,9 @@ c------------------------------------------------------------
 c      Read instruction file.
 c------------------------------------------------------------
       read(3,10)vtype,rtype,vunits,gtype,
-     & dystrt,hrstrt,dystop,hrstop,hint,ilon,jlat
+     & dystrt,hrstrt,dystop,hrstop,hint,ilon,jlat,dum,path
       close(3)
-10    format (//a8/a5/a8/a10/i8/i2/i8/i2/i2/i3/i3)
+10    format (//a8/a5/a8/a10/i8/i2/i8/i2/i2/i3/i3/i3/a200)
 
 c------------------------------------------------------------
 c     Convert start & end date to list of dates
@@ -303,7 +304,7 @@ CC Create the header line
       else
        print *, 'Error - special or normal?'
       endif
-
+c      print *, header
  1001 format (A8,22x,A5,5x,I4.4,I2.2,I2.2,1x,I4.4,4x,A8,5x,A10)
 
 CC Write to the file that's currently open     

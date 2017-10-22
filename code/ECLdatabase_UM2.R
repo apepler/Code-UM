@@ -214,3 +214,8 @@ rm(fixesDEC)
   write.csv(Fixes,outF)
   write.csv(Events,outE)
 }
+
+
+#setwd("/short/eg3/asp561/cts.dir/gcyc_out/ERAI/proj240_lows_rad2cv1")
+setwd("/short/eg3/asp561/cts.dir/gcyc_out/NCEP1/proj100_lows_rad5cv0.15_v2")
+ECLdatabase(2016,2017,'UM_NCEP1_proj100_rad5cv0.15_update')

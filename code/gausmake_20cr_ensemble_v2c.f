@@ -95,8 +95,8 @@ c----------------------------------------------------------------------
 
       instfile = 'ingausmake'
       ofile    = 'tape11'
-      path = '/srv/ccrc/data46/z5031363/20CRV2c/ens_members_56/'
-
+c      path = '/srv/ccrc/data46/z5031363/20CRV2c/ens_members_56/'
+c      path = '/g/data/eg3/asp561/20CRv2c/'
 c  Assumes a file of format 'name',year,'.nc'. Eg prmsl_2008.nc
       name='prmsl_'
 
@@ -112,9 +112,9 @@ c------------------------------------------------------------
 c      Read instruction file.
 c------------------------------------------------------------
       read(3,10)vtype,rtype,vunits,gtype,
-     & dystrt,hrstrt,dystop,hrstop,hint,ilon,jlat,member
+     & dystrt,hrstrt,dystop,hrstop,hint,ilon,jlat,member,path
       close(3)
-10    format (//a8/a5/a8/a10/i8/i2/i8/i2/i2/i3/i3/i3)
+10    format (//a8/a5/a8/a10/i8/i2/i8/i2/i2/i3/i3/i3/a200)
 
 c------------------------------------------------------------
 c     Convert start & end date to list of dates

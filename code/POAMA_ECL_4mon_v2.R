@@ -11,7 +11,7 @@
 
 library(ncdf4)
 
-ACCESS_ECLs_4month<-function(year1,year2,inday,dir="../gcyc_out/access-s1/proj100_rad5cv0.15/",thresh=0.15)
+ACCESS_ECLs_4month<-function(year1,year2,inday,dir="../gcyc_out/POAMA/proj240_rad5cv0.15/e24a/",thresh=0.15)
 {
 years=seq(year1,year2,1)
 months=1:12
@@ -21,13 +21,10 @@ members=paste("e",sprintf(0:10,fmt="%2.2d"),sep="")
 lat=seq(-89.5,89.5,1)
 lon=seq(0.5,359.5,1)
 
-members=paste("e",sprintf(1:11,fmt="%2.2d"),sep="")
-
 cyclones<-array(0,c(length(lon),length(lat),length(years),length(months),length(members),4))
 
 for(y in 1:length(years))
 for(m in 1:length(months))
-if(m!=4) ## Excluding April because not run yet. At least can analyse the rest
 for(e in 1:length(members))
 {
 indate=paste(years[y],sprintf("%02d",months[m]),sprintf("%02d",inday),sep="")
@@ -38,7 +35,6 @@ colnames(fixes)=c("ID","Fix","Date","Time","Open","Lon","Lat","MSLP","CV","Meh")
 fixes$Month=floor(fixes$Date/100)%%100
 fixes$Lat2=floor(fixes$Lat)
 fixes$Lon2=floor(fixes$Lon)%%360
-
 fixes$CV=abs(fixes$CV)
 fixes=fixes[fixes$CV>=thresh,]
 
@@ -87,6 +83,6 @@ nc_close(ncout)
 } # End function
 
 
-ACCESS_ECLs_4month(1990,2012,1,dir="/short/eg3/asp561/cts.dir/gcyc_out/access-s1/proj240_highs_rad10cv0.075/",thresh=0.075)
+ACCESS_ECLs_4month(1990,2012,1,dir="/short/eg3/asp561/cts.dir/gcyc_out/POAMA/proj240_highs_rad10cv0.075/e24a/",thresh=0.075)
 
-#ACCESS_ECLs_4month(1990,2012,1,dir="/short/eg3/asp561/cts.dir/gcyc_out/access-s1/proj240_rad5cv0.15/",thresh=0.25)
+#ACCESS_ECLs_4month(1990,2012,1,dir="/short/eg3/asp561/cts.dir/gcyc_out/POAMA/proj240_rad5cv0.15/e24a/",thresh=0.25)

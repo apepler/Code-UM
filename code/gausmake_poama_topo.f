@@ -1,16 +1,3 @@
-      module mod_inc
-         integer ilon,jlat,alon,alat
-         parameter (alon=500)
-         parameter (alat=500)
-         character*30 csource
-         character*10 gtype
-         character*8 vunits,vtype
-         character*5 rtype,spec
-         character*4 xname,yname,vname
-         save
-      end      
-
-
       program gausmake
 
 c----------------------------------------------------------------------
@@ -75,103 +62,67 @@ c     LAST CHANGE: 26/09/2013
 c
 c----------------------------------------------------------------------
 
-      use mod_inc
       implicit none
       character*200 ifile1
+      character*100 header
       character*20 ofile
       integer inet1,ncopn,ncvid,utopen,icode,latv,lonv,ivar
-      character*10 sres,res
+      integer i,j,k,ilon,jlat
 
-      call get_command_argument(1,sres)
-      print *, sres
+      parameter (ilon=144)
+      parameter (jlat=72)
+      real latitude(jlat)
+      real latitude2(jlat)
+      real longitude(ilon)
+      real longitude2(ilon)
+      real x(ilon,jlat)
+      real x2(ilon,jlat)
+      real*8 xscale,xoff
+      integer*2 work(ilon,jlat)
+      integer*2 miss
+      integer start(3)
+      integer count(3)
+      integer ind
 
-      if (sres.eq.'50') then
-        vname='hgt0'
-        xname='lon0'
-        yname='lat0'
-        jlat=101
-        ilon=149
-        ofile='MERRA_topo_0'
-        res='0.5X0.5'
-      else if (sres.eq.'100') then
-        vname='hgtH'
-        xname='lonH'
-        yname='latH'
-        jlat=51
-        ilon=75
-        ofile='MERRA_topo_H'
-        res='1.0X1.0'
-      else if (sres.eq.'150') then
-        vname='hgt1'
-        xname='lon1'
-        yname='lat1'
-        jlat=34
-        ilon=50
-        ofile='MERRA_topo_1'
-        res='1.5X1.5'
-      else if (sres.eq.'250') then
-        vname='hgt2'
-        xname='lon2'
-        yname='lat2'
-        jlat=21
-        ilon=30
-        ofile='MERRA_topo_2'
-        res='2.5X2.5'
-      else
-         print *, 'Only applicably resolutions are 50, 100, 150 or 250'
-         stop
-      endif   
-
+      ofile    = 'POAMA_topo'
       open(2,file=ofile,form='unformatted') 
 
-      ifile1= '/srv/ccrc/data34/z3478332/MERRA/'//
-     +        'MERRA_topo_regrid.nc'
+      ifile1= 'poama_topo.nc'
+
       inet1=ncopn(ifile1,0,icode)
 
-      call write_ausm(res,inet1,2)
-      end program
-      
-cc Returning to subroutine so i can specify x properly
-      subroutine write_ausm(res,inet1,onet)  
-      use mod_inc
-
-      real x(ilon,jlat)
-      real work(ilon,jlat)
-      integer start(2)
-      integer count(2)
-      integer inet1,onet
-      real*8 lat1(alat),lon1(alon)
-      real latitude(alat),longitude(alon)
-      character*10 res
-      character*100 header
-
-      latv=ncvid(inet1,yname,icode)
-      call ncvgt(inet1,latv,1,jlat,lat1,icode)
-      latitude=real(lat1)
-      lonv=ncvid(inet1,xname,icode)
-      call ncvgt(inet1,lonv,1,ilon,lon1,icode)
-      longitude=real(lon1)
+      latv=ncvid(inet1,'lat',icode)
+      call ncvgt(inet1,latv,1,jlat,latitude,icode)
+      lonv=ncvid(inet1,'lon',icode)
+      call ncvgt(inet1,lonv,1,ilon,longitude,icode)  
 
       start(1)=1
       start(2)=1
+      start(3)=1
       count(1)=ilon
       count(2)=jlat
-      ivar=ncvid(inet1,vname,icode)
-      call ncvgt(inet1,ivar,start,count,work,icode)
-      x=work/9.80665
+      count(3)=1
+      ivar=ncvid(inet1,'orog',icode)
+
+      call ncvgt(inet1,ivar,start,count,x,icode)
 
 CC Create the header line      
 
       write(header,'(A8,22x,A5,5x,I4.4,I2.2,I2.2,1x,I4.4,4x,A8,5x,A10)')
-     $"Z","MERRA",1980,1,1,0,"m",res
+     $"Z","ERAI",1980,1,1,0,"m","1.5X1.5"
+      print *, longitude(ilon),latitude(jlat),maxval(x)
 
-CC Write to the file that's currently open    
-      write(onet)jlat
-      write(onet)(latitude(j),j=1,jlat)
-      write(onet)ilon
-      write(onet)(longitude(i),i=1,ilon)
-      write(onet)header
-      write(onet)((x(i,j),i=1,ilon),j=1,jlat)
+CC Fix the lat/lon problem    
+      latitude2=latitude(jlat:1:-1)
+      x2=x(:,jlat:1:-1)
+
+CC Write to the file that's currently open
+      write(2)jlat
+      write(2)(latitude2(j),j=1,jlat)
+      write(2)ilon
+      write(2)(longitude(i),i=1,ilon)
+      write(2)header
+      write(2)((x2(i,j),i=1,ilon),j=1,jlat)
       
       return
       end

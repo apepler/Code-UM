@@ -77,7 +77,8 @@ c----------------------------------------------------------------------
       real x(ilon,jlat)
       real x2(ilon,jlat)
       real xscale,xoff
-      integer*2 work(ilon,jlat)
+c      integer*2 work(ilon,jlat)
+      real work(ilon,jlat)
       integer*2 miss
       integer start(3)
       integer count(3)
@@ -85,14 +86,16 @@ c----------------------------------------------------------------------
       ofile    = 'NCEP1_topo'
       open(2,file=ofile,form='unformatted') 
 
-      ifile1= '/srv/ccrc/data34/z3478332/NCEP/'//
+      ifile1= '/g/data/eg3/asp561/NCEP1/'//
      +       'hgt.sfc.nc'
       inet1=ncopn(ifile1,0,icode)
-
+      print *, ifile1
       latv=ncvid(inet1,'lat',icode)
       call ncvgt(inet1,latv,1,jlat,latitude,icode)
       lonv=ncvid(inet1,'lon',icode)
       call ncvgt(inet1,lonv,1,ilon,longitude,icode)  
+
+      print *, latitude(jlat),longitude(ilon)
 
       start(1)=1
       start(2)=1
@@ -101,12 +104,14 @@ c----------------------------------------------------------------------
       count(2)=jlat
       count(3)=1
       ivar=ncvid(inet1,'hgt',icode)
-
+      
       call ncvgt(inet1,ivar,start,count,work,icode)
-      call ncagt(inet1,ivar,'scale_factor',xscale,icode)
-      call ncagt(inet1,ivar,'add_offset',xoff,icode)
-      call ncagt(inet1,ivar,'missing_value',miss,icode)      
-      call unpack(work,x,xscale,xoff,miss,ilon,jlat)
+      print *, work(1,1)
+      x=work
+c      call ncagt(inet1,ivar,'scale_factor',xscale,icode)
+c      call ncagt(inet1,ivar,'add_offset',xoff,icode)
+c      call ncagt(inet1,ivar,'missing_value',miss,icode)      
+c      call unpack(work,x,xscale,xoff,miss,ilon,jlat)
 
       print*, maxval(work),maxval(x),minval(x)
 CC Create the header line      
