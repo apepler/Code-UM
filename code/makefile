@@ -23,7 +23,7 @@ LIBDIRGFORT := $(shell echo $(LIBDIRGFORT))
 LIBDIRNETCDF := $(shell echo $(LIBDIRNETCDF))
 
 
-all: gausmake_erai gausmake_erai_spec gausmake_erai_topo gausmake_merra gausmake_merraN gausmake_wrf gausmake_ncep1 gausmake_cmip gausmake_20cr gausmake_access gausmake_erai_raijin gausmake_poama daily
+all: gausmake_erai gausmake_erai_spec gausmake_erai_topo gausmake_merra gausmake_merraN gausmake_wrf gausmake_ncep1 gausmake_cmip gausmake_20cr gausmake_access gausmake_erai_raijin gausmake_poama daily cmip5
 
 gausmake_erai:
 	$(F90C) $(FFLAGS) gausmake_erai_kk.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_erai
@@ -80,6 +80,7 @@ gausmake_20cr:
 gausmake_access:
 	$(F90C) $(FFLAGS) gausmake_access.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_access
 	$(F90C) $(FFLAGS) gausmake_access_topo.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_access_topo
+	$(F90C) $(FFLAGS) gausmake_access_double.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_access_double
 
 gausmake_raijin:
 	$(F90C) $(FFLAGS) gausmake_erai_raijin.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_erai_raijin
@@ -91,6 +92,11 @@ daily:
 gausmake_poama:
 	$(F90C) $(FFLAGS) gausmake_poama.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_poama
 	$(F90C) $(FFLAGS) gausmake_poama_topo.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_poama_topo
+
+cmip5:
+	$(F90C) $(FFLAGS) gausmake_cmip5_topo.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_cmip5_topo
+	$(F90C) $(FFLAGS) gausmake_ACCESS1-3.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_ACCESS1-3
+
 
 clean:
 	rm -f gausmake_erai
@@ -128,3 +134,5 @@ clean:
 	rm -f gausmake_erai_raijin
 	rm -f gausmake_erai_topo_raijin
 	rm -f gausmake_erai_daily
+	rm -f gausmake_cmip5
+	rm -f gausmake_ACCESS1-3
