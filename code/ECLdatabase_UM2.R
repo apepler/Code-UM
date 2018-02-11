@@ -21,7 +21,7 @@
 
 ECLdatabase<-function(yearS,yearE,output)
 {
-
+  print(output)
   ##Files with ECL track data for required years & preceding summers.  
   year<-seq(yearS,yearE)
   fname1=paste('tracks_',as.character(year),'.dat',sep="")
@@ -171,7 +171,7 @@ rm(fixesDEC)
   ## Take only the events where at least one fix is closed & in the ECL region
   ##And duration is at least 2 consecutive fixes
   
-  I<-which(events2[,9]>0 & events2[,2]>1 & events2[,10]==0 & events2[,6]>=0.25)
+  I<-which(events2[,9]>0 & events2[,2]>1 & events2[,10]==0)
   events3<-events2[I,]
   include<-match(fixes[,1],events3[,1])
   J<-which(is.na(include)==0)
@@ -216,6 +216,16 @@ rm(fixesDEC)
 }
 
 
-#setwd("/short/eg3/asp561/cts.dir/gcyc_out/ERAI/proj240_lows_rad2cv1")
-setwd("/short/eg3/asp561/cts.dir/gcyc_out/NCEP1/proj100_lows_rad5cv0.15_v2")
-ECLdatabase(2016,2017,'UM_NCEP1_proj100_rad5cv0.15_update')
+name="ACCESS1-3"
+basedir="/short/eg3/asp561/cts.dir/gcyc_out/CMIP5/"
+
+for(thresh in c("rad2cv1","rad5cv0.15"))
+{
+setwd(paste0(basedir,name,"/historical/r1i1p1/proj100_lows_",thresh))
+ECLdatabase(1950,2005,paste0(name,"_historical_r1i1p1_ECLs_proj100_",thresh,"_19502005"))
+
+setwd(paste0(basedir,name,"/rcp85/r1i1p1/proj100_lows_",thresh))
+ECLdatabase(2006,2060,paste0(name,"_rcp85_r1i1p1_ECLs_proj100_",thresh,"_20062060"))
+ECLdatabase(2060,2100,paste0(name,"_rcp85_r1i1p1_ECLs_proj100_",thresh,"_20602100"))
+
+}

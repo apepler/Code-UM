@@ -1,0 +1,16 @@
+INGAUSMAKE PARAMETERS:                               
+                                                                
+PMSL                            vtype  (a8)  Quantity (e.g.'Z0500','MSLP')
+RCP                     rcp (a20) e.g. "Historical"
+MEMBER                         member (a20) e.g. r1i1p1
+MODEL                      rtype (a20) Name e.g. ACCESS1-3
+MB                           vunit  (a8)   Units
+1.875X1.25                         gtype  (a10)  Grid resolution
+YYYYMMDD1                       dystrt (i8)   Start date (yyyymmdd)
+00                              hrstrt (i2)   Start hour (hh)
+YYYYMMDD2                       dystop (i8)   End date (yyyymmdd)
+18                              hrstop (i2)   Start hour (hh)
+4                               hint   (i2)   Number of daily measurements 
+ILON                             ilon   (i3)   Length of longitudes
+JLAT                            jlat   (i3)   Length of latitudes 
+/g/data/ua6/unofficial-ESG-replica/tmp/sLinks/output/

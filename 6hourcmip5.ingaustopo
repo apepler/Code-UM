@@ -1,0 +1,8 @@
+INGAUSMAKE PARAMETERS:                               
+
+ACCESS1-3                      name (a10) Name e.g. ACCESS1-3
+historical                     rcp (a10) e.g. "Historical"
+r0i0p0                         mem (a10) e.g. r1i1p1
+192                             ilon   (i3)   Length of longitudes
+145                             jlat   (i3)   Length of latitudes 
+/g/data/ua6/unofficial-ESG-replica/tmp/sLinks/output/historical/fx/orog/

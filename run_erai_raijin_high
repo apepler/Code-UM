@@ -84,8 +84,9 @@ while [[ $iyear -le $lastyear ]]; do
 dname="ann"
 
 echo $iyear $dname >> $diagnostic
-date1_loc=$(($iyear-1))1201
-date2_loc=$(($iyear))1231
+#date1_loc=$(($iyear-1))1201
+date1_loc=$(($iyear))0101
+date2_loc=$(($iyear))0131
 
 echo 'date1 loc = ' $date1_loc >> $diagnostic 
 echo 'date2 loc = ' $date2_loc >> $diagnostic 

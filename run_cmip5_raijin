@@ -40,13 +40,24 @@ check_delete $stderr
 check_delete $diagnostic
 
 #### Important settings
-datapath=/g/data1/ub4/erai/netcdf/6hr/atmos/oper_an_sfc/v01/psl/
-firstyear=2017
-lastyear=2017
+name=ACCESS1-3
+rcp=rcp85
+member=r1i1p1
+ilon=192
+jlat=145
 
-rad=2
-CV=1
-proj=240
+firstyear=$1
+lastyear=$2
+
+type=low
+rad=5
+CV=0.15
+
+#type=high
+#rad=10
+#CV=0.075
+
+proj=100
 NN=$((proj*2+1))
 if [[ $proj -le 100 ]] ; then
   DFF=2.0
@@ -54,12 +65,10 @@ else
   DFF=0.5
 fi
 
-outpath=$outdir/ERAI/proj${proj}_lows_rad${rad%.*}cv${CV}/
+outpath=$outdir/CMIP5/${name}/${rcp}/${member}/proj${proj}_${type}s_rad${rad%.*}cv${CV}/
 check_delete $diagnostic
 
 #----------------------------------------------------------------------
-
-type=low
 
 print "\nSCRIPT: runplot_mslp_day VERSION: 1.0"
 print "\nSCRIPT: runplot_mslp_day VERSION: 1.0" > $diagnostic
@@ -85,17 +94,17 @@ dname="ann"
 
 echo $iyear $dname >> $diagnostic
 
-if [[ $iyear -eq 1979 ]] ; then
-  date1_loc=$(($iyear))0101
-else
-  date1_loc=$(($iyear-1))1201
+if [[ $iyear -eq 1950 || $iyear -eq 2006 ]] ; then
+ date1_loc=$(($iyear))0101 
+else 
+ date1_loc=$(($iyear-1))1201
 fi
 date2_loc=$(($iyear))1231
 
 echo 'date1 loc = ' $date1_loc >> $diagnostic 
 echo 'date2 loc = ' $date2_loc >> $diagnostic 
 
-if [[ $iyear -eq 1999 || $iyear -eq 2000 ]] ; then
+if [[ $iyear -eq 1999 || $iyear -eq 2000 || $iyear -eq 2100 ]] ; then
     date1a=$(($iyear-81))1201
     date2a=$(($iyear-80))1231
     date1_loc2=${date1a:2:6}
@@ -104,9 +113,6 @@ else
     date1_loc2=${date1_loc:2:6}
     date2_loc2=${date2_loc:2:6}
 fi
-
-print $date1_loc $date1_loc2
-print $date2_loc $date2_loc2
 
 
 #----------------------------------------------------------------------
@@ -143,23 +149,24 @@ function runjob {
 
 print "AUTOMATICALLY EDITING CONTROL FILES" >> $diagnostic
 # Added gausmake which makes the files
-sed -e "s/YYYYMMDD1/$date1_loc/" -e "s/YYYYMMDD2/$date2_loc/" 6hourerai.ingausmake.kk > ingausmake
-sed -e "s/YYMMDD1/$date1_loc2/" -e "s/YYMMDD2/$date2_loc2/" -e "s/NN/$NN/g" -e "s/DFF/$DFF/g" -e "s/PROJ/$proj/" -e "s/CVMIN/$CV/g" -e "s/CVRAD/$rad/g" 24houraccess.incycloc > incycloc
-sed -e "s/YYMMDD1/$date1_loc2/" -e "s/YYMMDD2/$date2_loc2/" 6hourerai.intrack.kk > intrack
+sed -e "s/YYYYMMDD1/$date1_loc/" -e "s/YYYYMMDD2/$date2_loc/" -e "s/RCP/$rcp/" -e "s/MEMBER/$member/" -e "s/MODEL/$name/" -e "s/ILON/$ilon/" -e "s/JLAT/$jlat/" 6hourcmip5.ingausmake > ingausmake
+sed -e "s/YYMMDD1/$date1_loc2/" -e "s/YYMMDD2/$date2_loc2/" -e "s/NN/$NN/g" -e "s/DFF/$DFF/g" -e "s/PROJ/$proj/" -e "s/CVMIN/$CV/g" -e "s/CVRAD/$rad/g" 6hourerai.${type}.incycloc > incycloc
+sed -e "s/YYMMDD1/$date1_loc2/" -e "s/YYMMDD2/$date2_loc2/" 6hourerai.${type}.intrack > intrack
 
 check_delete tape1
 check_delete tape11
 
 print 'calling gausmake'
-if [[ $iyear -eq 1999 || $iyear -eq 2000 ]] ; then
-    $spath/gausmake_erai_raijin spec
+if [[ $iyear -eq 1999 || $iyear -eq 2000 || $iyear -eq 2100 ]] ; then
+    $spath/gausmake_${name} spec
 else
-    $spath/gausmake_erai_raijin norm
+    $spath/gausmake_${name}  norm
 fi
 cp tape11 monthfile
 
 print 'calling cycloc'
-$CYCBIN/cycloc3x.hr -i incycloc -c loc_output -z $spath/ERAI_topo_raijin monthfile >> $stdout
+$CYCBIN/cycloc3x.hr -i incycloc -c loc_output -z $spath/${name}_topo monthfile >> $stdout
+#$CYCBIN/cycloc3x.hr -i incycloc -d 1 -c loc_output monthfile #>> $stdout
 #cp loc_output $outpath/mslpo.$date1_loc$date2_loc.00001800.gcycloc
 
 print 'calling track'
@@ -167,7 +174,7 @@ $CYCBIN/trackx.hr  -FO -i intrack -c loc_output >> $stdout
 touch trackfile
 cat thist?.1 > trackfile
 rm -f thist*
-cp trackfile $outpath/mslpo.$date1_loc$date2_loc.00001800.trackfile
+#cp trackfile $outpath/mslpo.$date1_loc$date2_loc.00001800.trackfile
 
 ofile=$outpath/tracks_${iyear}.dat
 print 'calling awk'
@@ -183,8 +190,8 @@ check_delete $stdout
 
 echo "Run Job" >> $diagnostic
 runjob
+
 iyear=$(($iyear+1))
-print iyear
 #----------------------------------------------------------------------
 done  # year loop
 

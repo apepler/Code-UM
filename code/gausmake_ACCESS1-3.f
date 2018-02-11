@@ -231,7 +231,13 @@ cc Because the stupid files start at 6Z
 cc Plus the historical and rcp simulations use different decades
 cc How irritating
 
+c Adding something to skip this program 
+c For 00Z on 1/1/1950 and 1/1/2006
+
       mdh=nh+100*nd+10000*nm
+
+      if(mdh.eq.10100.and.ny.eq.1950) return
+      if(mdh.eq.10100.and.ny.eq.2006) return
 
       if(rcp.eq."historical") then
         dd=ny/10
@@ -241,7 +247,11 @@ c If date is YYY0010100 nd=nd-1
         endif
        
         y1=dd*10
-        y2=(dd+1)*10 
+        if(y1.eq.2000) then
+          y2=2006
+        else
+          y2=(dd+1)*10
+        endif 
       else
 c Need to use stupid decades 2006-2016 etc
         dd=(ny-6)/10
@@ -251,7 +261,11 @@ c If date is YYY0010100 nd=nd-1
         endif
 
         y1=(dd*10)+6
-        y2=(dd*10)+16
+        if(y1.eq.2096) then
+          y2=2101
+        else
+          y2=(dd*10)+16
+        endif
       endif
 
       write(ifile,2001)trim(path),trim(rcp),'/6hrPlev/psl/'

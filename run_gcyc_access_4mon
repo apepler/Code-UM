@@ -48,9 +48,9 @@ datapath=/g/data2/ub7/access-s1/hc/raw_model/atmos/psl/daily
 firstyear=1990
 lastyear=2012
 
-type=high
-rad=10
-CV=0.075
+type=low
+rad=5
+CV=0.15
 proj=240
 NN=$((proj*2+1))
 if [[ $proj -le 100 ]] ; then
@@ -89,7 +89,7 @@ for member in e01 e02 e03 e04 e05 e06 e07 e08 e09 e10 e11 ; do
  iyear=$firstyear
  while [[ $iyear -le $lastyear ]]; do
  echo $iyear
- for month in 1 2 3 5 6 7 8 9 10 11 12 ; do
+ for month in 4 ; do
  for day in 01 ; do
  indate=$iyear${amonth[$month]}$day
  date1=$indate
@@ -164,9 +164,9 @@ check_delete tape11
 print 'calling gausmake'
 
 if [[ $iyear -eq 1999 || $iyear -eq 2000 ]] ; then
-    $spath/gausmake_access spec
+    $spath/gausmake_access_double spec
 else
-    $spath/gausmake_access norm
+    $spath/gausmake_access_double norm
 fi
 cp tape11 monthfile
 
