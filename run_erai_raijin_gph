@@ -44,9 +44,11 @@ datapath=/g/data1/ub4/erai/netcdf/6hr/atmos/oper_an_sfc/v01/psl/
 firstyear=2017
 lastyear=2017
 
-rad=2
+daily=true
+level=500
+rad=5
 CV=1
-proj=240
+proj=100
 NN=$((proj*2+1))
 if [[ $proj -le 100 ]] ; then
   DFF=2.0
@@ -54,7 +56,14 @@ else
   DFF=0.5
 fi
 
-outpath=$outdir/ERAI/proj${proj}_lows_rad${rad%.*}cv${CV}/
+if [[ $daily -eq true ]]; then
+  gausmake=$spath/gausmake_erai_raijin_gph_daily
+  outpath=$outdir/ERAI/${level}hPa_z/daily_proj${proj}_lows_rad${rad%.*}cv${CV}/
+else
+  gausmake=$spath/gausmake_erai_raijin_gph
+  outpath=$outdir/ERAI/${level}hPa_z/proj${proj}_lows_rad${rad%.*}cv${CV}/
+fi
+
 check_delete $diagnostic
 
 #----------------------------------------------------------------------
@@ -143,7 +152,7 @@ function runjob {
 
 print "AUTOMATICALLY EDITING CONTROL FILES" >> $diagnostic
 # Added gausmake which makes the files
-sed -e "s/YYYYMMDD1/$date1_loc/" -e "s/YYYYMMDD2/$date2_loc/" 6hourerai.ingausmake.kk > ingausmake
+sed -e "s/YYYYMMDD1/$date1_loc/" -e "s/YYYYMMDD2/$date2_loc/" -e "s/LLL/$level/" 6hourerai.ingausmake.gph > ingausmake
 sed -e "s/YYMMDD1/$date1_loc2/" -e "s/YYMMDD2/$date2_loc2/" -e "s/NN/$NN/g" -e "s/DFF/$DFF/g" -e "s/PROJ/$proj/" -e "s/CVMIN/$CV/g" -e "s/CVRAD/$rad/g" 24houraccess.incycloc > incycloc
 sed -e "s/YYMMDD1/$date1_loc2/" -e "s/YYMMDD2/$date2_loc2/" 6hourerai.intrack.kk > intrack
 
@@ -152,9 +161,9 @@ check_delete tape11
 
 print 'calling gausmake'
 if [[ $iyear -eq 1999 || $iyear -eq 2000 ]] ; then
-    $spath/gausmake_erai_raijin spec
+    $gausmake spec
 else
-    $spath/gausmake_erai_raijin norm
+    $gausmake norm
 fi
 cp tape11 monthfile
 
@@ -167,7 +176,7 @@ $CYCBIN/trackx.hr  -FO -i intrack -c loc_output >> $stdout
 touch trackfile
 cat thist?.1 > trackfile
 rm -f thist*
-cp trackfile $outpath/mslpo.$date1_loc$date2_loc.00001800.trackfile
+#cp trackfile $outpath/mslpo.$date1_loc$date2_loc.00001800.trackfile
 
 ofile=$outpath/tracks_${iyear}.dat
 print 'calling awk'
