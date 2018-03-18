@@ -41,14 +41,14 @@ check_delete $diagnostic
 
 #### Important settings
 datapath=/g/data1/ub4/erai/netcdf/6hr/atmos/oper_an_sfc/v01/psl/
-firstyear=2017
-lastyear=2017
+firstyear=1990
+lastyear=2013
 
 daily=true
-level=500
+level=$1
 rad=5
 CV=1
-proj=100
+proj=240
 NN=$((proj*2+1))
 if [[ $proj -le 100 ]] ; then
   DFF=2.0
@@ -56,10 +56,12 @@ else
   DFF=0.5
 fi
 
-if [[ $daily -eq true ]]; then
+if $daily ; then
+  echo daily $daily
   gausmake=$spath/gausmake_erai_raijin_gph_daily
   outpath=$outdir/ERAI/${level}hPa_z/daily_proj${proj}_lows_rad${rad%.*}cv${CV}/
 else
+  echo "not daily, daily = " $daily
   gausmake=$spath/gausmake_erai_raijin_gph
   outpath=$outdir/ERAI/${level}hPa_z/proj${proj}_lows_rad${rad%.*}cv${CV}/
 fi
@@ -168,7 +170,7 @@ fi
 cp tape11 monthfile
 
 print 'calling cycloc'
-$CYCBIN/cycloc3x.hr -i incycloc -c loc_output -z $spath/ERAI_topo_raijin monthfile >> $stdout
+$CYCBIN/cycloc3x.hr -i incycloc -c loc_output  monthfile >> $stdout
 #cp loc_output $outpath/mslpo.$date1_loc$date2_loc.00001800.gcycloc
 
 print 'calling track'

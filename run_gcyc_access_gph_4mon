@@ -44,13 +44,14 @@ outdir=$bpath/gcyc_out/
 diagnostic=diagnostics.out
 
 #### Important settings
-datapath=/g/data2/ub7/access-s1/hc/raw_model/atmos/psl/daily
+datapath=/g/data2/ub7/access-s1/hc/raw_model/atmos/zg/daily
 firstyear=1990
 lastyear=2012
 
+level=$1
 type=low
 rad=5
-CV=0.15
+CV=1
 proj=240
 NN=$((proj*2+1))
 if [[ $proj -le 100 ]] ; then
@@ -59,7 +60,7 @@ else
   DFF=0.5
 fi
 
-opath=$outdir/access-s1/proj${proj}_${type}s_rad${rad%.*}cv${CV}/
+opath=$outdir/access-s1/${level}hPa_z/proj${proj}_${type}s_rad${rad%.*}cv${CV}/
 check_delete $diagnostic
 
 #----------------------------------------------------------------------
@@ -90,7 +91,7 @@ for member in e01 e02 e03 e04 e05 e06 e07 e08 e09 e10 e11 ; do
  while [[ $iyear -le $lastyear ]]; do
  echo $iyear
  for month in 1 2 3 4 5 6 7 8 9 10 11 12 ; do
- for day in 09 17 25 ; do
+ for day in 01 09 17 25 ; do
  indate=$iyear${amonth[$month]}$day
  date1=$indate
  daycount=${numdays[$month]}
@@ -137,8 +138,8 @@ check_delete tape11
 outpath=$opath/$member/
 mkdir -p $outpath
 
-#print 'Output directories setted up.'
-#print 'Proceeding to running script out.'
+print 'Output directories setted up.'
+print 'Proceeding to running script out.'
 
 #----------------------------------------------------------------------
 #     Simple processing script
@@ -154,7 +155,7 @@ function runjob {
 print "AUTOMATICALLY EDITING CONTROL FILES" >> $diagnostic
 # Added gausmake which makes the files
 
-sed -e "s/YYYYMMDD/$indate/" -e "s#DATADIR#$gpath#" -e "s#MEMBER#$member#" -e "s#DAYS#$daycount#" 24houraccess.ingausmake.4mon > ingausmake
+sed -e "s/YYYYMMDD/$indate/" -e "s#DATADIR#$gpath#" -e "s#MEMBER#$member#" -e "s#DAYS#$daycount#" -e "s/LLL/$level/" 24houraccess.ingausmake.4mon.gph > ingausmake
 sed -e "s/YYMMDD1/$date1_loc2/" -e "s/YYMMDD2/$date2_loc2/" -e "s/NN/$NN/g" -e "s/DFF/$DFF/g" -e "s/PROJ/$proj/" -e "s/CVMIN/$CV/g" -e "s/CVRAD/$rad/g" 6hourerai.${type}.incycloc > incycloc 
 sed -e "s/YYMMDD1/$date1_loc2/" -e "s/YYMMDD2/$date2_loc2/" 6hourerai.intrack.kk > intrack
 
@@ -162,34 +163,34 @@ check_delete tape1
 check_delete tape11
 
 ofile=$outpath/tracks_${indate}_4month.dat
+touch $ofile
 
 # Adding more to redo with the non-double approach
 # When the previous attempt made an empty file
 
 if [[ ! -s $ofile ]] ; then
 
-print 'calling gausmake for ' $member $indate
+print 'calling gausmake'
 
- if [[ $iyear -eq 1999 || $iyear -eq 2000 ]] ; then
-    $spath/gausmake_access spec
- else
-    $spath/gausmake_access norm
- fi
- cp tape11 monthfile
+if [[ $iyear -eq 1999 || $iyear -eq 2000 ]] ; then
+    $spath/gausmake_access_gph spec
+else
+    $spath/gausmake_access_gph norm
+fi
+cp tape11 monthfile
 
- print 'calling cycloc'
- $CYCBIN/cyclocx.hr -i incycloc -d 1 -c loc_output -z $topo monthfile >> stdout
- #$CYCBIN/cyclocx.hr -i incycloc -d 1 -c loc_output monthfile >> stdout
+print 'calling cycloc'
+$CYCBIN/cyclocx.hr -i incycloc -d 1 -c loc_output monthfile >> stdout
+#$CYCBIN/cyclocx.hr -i incycloc -d 1 -c loc_output monthfile >> stdout
 
- print 'calling track'
- $CYCBIN/trackx.hr  -FO -i intrack -d 1 -c loc_output >> stdout
- touch trackfile
- cat thist?.1 > trackfile
- rm -f thist*
+print 'calling track'
+$CYCBIN/trackx.hr  -FO -i intrack -d 1 -c loc_output >> stdout
+touch trackfile
+cat thist?.1 > trackfile
+rm -f thist*
 
- print 'calling awk'
- touch $ofile
- awk -f $spath/maketracks_UM.awk trackfile > $ofile
+print 'calling awk'
+awk -f $spath/maketracks_UM.awk trackfile > $ofile
 fi
 }
 

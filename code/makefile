@@ -23,7 +23,7 @@ LIBDIRGFORT := $(shell echo $(LIBDIRGFORT))
 LIBDIRNETCDF := $(shell echo $(LIBDIRNETCDF))
 
 
-all: gausmake_erai gausmake_erai_spec gausmake_erai_topo gausmake_merra gausmake_merraN gausmake_wrf gausmake_ncep1 gausmake_cmip gausmake_20cr gausmake_access gausmake_erai_raijin gausmake_poama daily cmip5 gph
+all: gausmake_erai gausmake_erai_spec gausmake_erai_topo gausmake_merra gausmake_merraN gausmake_wrf gausmake_ncep1 gausmake_cmip gausmake_20cr access erai poama daily cmip5 gph access_gph
 
 gausmake_erai:
 	$(F90C) $(FFLAGS) gausmake_erai_kk.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_erai
@@ -77,19 +77,19 @@ gausmake_20cr:
 	$(F90C) $(FFLAGS) gausmake_20cr_mean_v2c.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_20cr_mean_v2c
 	$(F90C) $(FFLAGS) gausmake_20cr_topo.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_20cr_topo
 
-gausmake_access:
+access:
 	$(F90C) $(FFLAGS) gausmake_access.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_access
 	$(F90C) $(FFLAGS) gausmake_access_topo.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_access_topo
 	$(F90C) $(FFLAGS) gausmake_access_double.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_access_double
 
-gausmake_raijin:
+erai:
 	$(F90C) $(FFLAGS) gausmake_erai_raijin.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_erai_raijin
 	$(F90C) $(FFLAGS) gausmake_erai_topo_raijin.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_erai_topo_raijin
 
 daily:
 	$(F90C) $(FFLAGS) gausmake_erai_daily.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_erai_daily
 
-gausmake_poama:
+poama:
 	$(F90C) $(FFLAGS) gausmake_poama.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_poama
 	$(F90C) $(FFLAGS) gausmake_poama_topo.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_poama_topo
 
@@ -100,6 +100,10 @@ cmip5:
 gph:
 	$(F90C) $(FFLAGS) gausmake_erai_raijin_gph.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_erai_raijin_gph
 	$(F90C) $(FFLAGS) gausmake_erai_raijin_gph_daily.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_erai_raijin_gph_daily
+
+access_gph:
+	$(F90C) $(FFLAGS) gausmake_access_gph.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_access_gph
+	$(F90C) $(FFLAGS) gausmake_access_gph_double.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_access_gph_double
 
 clean:
 	rm -f gausmake_erai
@@ -134,6 +138,7 @@ clean:
 	rm -f gausmake_20cr_ensemble_v2c
 	rm -f gausmake_20cr_mean_v2c
 	rm -f gausmake_access
+	rm -f gausmake_access_double
 	rm -f gausmake_erai_raijin
 	rm -f gausmake_erai_topo_raijin
 	rm -f gausmake_erai_daily
@@ -141,3 +146,5 @@ clean:
 	rm -f gausmake_ACCESS1-3
 	rm -f gausmake_erai_raijin_gph
 	rm -f gausmake_erai_raijin_gph_daily
+	rm -f gausmake_access_gph
+	rm -f gausmake_access_gph_double
