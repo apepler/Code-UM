@@ -96,6 +96,7 @@ poama:
 cmip5:
 	$(F90C) $(FFLAGS) gausmake_cmip5_topo.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_cmip5_topo
 	$(F90C) $(FFLAGS) gausmake_ACCESS1-3.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_ACCESS1-3
+	$(F90C) $(FFLAGS) gausmake_MRI-CGCM3.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_MRI-CGCM3
 
 gph:
 	$(F90C) $(FFLAGS) gausmake_erai_raijin_gph.f $(LIBDIGFORT) $(LIBDIRNETCDF) $(LIBS) -o gausmake_erai_raijin_gph

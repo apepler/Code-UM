@@ -91,14 +91,13 @@ c------------------------------------------------------------
       close(3)
 10    format (//a20/a20/a20/i3/i3/a200)
 
-c path = '/g/data/ua6/unofficial-ESG-replica/tmp/sLinks/'//
-c      + 'output/historical/fx/orog/'
+c path = '/g/data1/ua6/DRSv2/CMIP5/'//
 c      mem='r0i0p0'
 c      rcp='historical'
 
-      write(ifile,'(a,a,a1,a,a,a,a1,a,a1,a,a3)')trim(path)
-     &,trim(name),'/',trim(mem),'/orog_fx_',trim(name),"_"
-     &,trim(rcp),'_',trim(mem),'.nc'
+      write(ifile,'(2a,a1,6a,a1,a,a1,a,a3)')trim(path)
+     &,trim(name),'/',trim(rcp),'/fx/atmos/',trim(mem),'/orog/latest/'
+     &,'orog_fx_',trim(name),"_",trim(rcp),'_',trim(mem),'.nc'
 
       write(ofile,'(a,a)')trim(name),'_topo'
       open(2,file=ofile,form='unformatted') 
